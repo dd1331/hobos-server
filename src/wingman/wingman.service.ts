@@ -112,7 +112,7 @@ export class WingmanService {
         throw new Error();
       }
       const params = {
-        Bucket: 'movement-seoul',
+        Bucket: 'hobos-seoul',
         Key: path,
         Body: data,
         ContentType: 'image/jpeg',

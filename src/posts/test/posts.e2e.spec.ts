@@ -151,7 +151,7 @@ describe('Posts', () => {
       const dtoWithHashTag: CreatePostDto = {
         ...createPostDto,
         fileId:
-          'https://movement-seoul.s3.ap-northeast-2.amazonaws.com/credit_button.png',
+          'https://hobos-seoul.s3.ap-northeast-2.amazonaws.com/credit_button.png',
       };
       // TODO should i get created files and compare?
       const { body } = await request(agent)

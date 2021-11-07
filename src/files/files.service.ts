@@ -21,7 +21,7 @@ export class FilesService {
   }
   async upload(file): Promise<File> {
     const { originalname } = file;
-    const bucketS3 = 'movement-seoul';
+    const bucketS3 = 'hobos-seoul';
     const { Location, ETag, Key } = await this.uploadS3(
       file.buffer,
       bucketS3,
@@ -96,7 +96,7 @@ export class FilesService {
     const { passThrough, promise } = this.uploadFromStream(
       responseStream,
       event.fileName,
-      'movement-seoul',
+      'hobos-seoul',
     );
     responseStream.data.pipe(passThrough);
 

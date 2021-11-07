@@ -1,4 +1,4 @@
-# movement
+# hobos
 
 Nestjs와 Vuejs를 활용한 커뮤니티 사이트(모바일 우선, 웹 UI 추후 적용)
 
