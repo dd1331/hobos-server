@@ -30,6 +30,7 @@ import { MatcherModule } from './matcher/matcher.module';
 import { RoomLog } from './matcher/room_log.entity';
 import { Room } from './matcher/room.entity';
 import { Chat } from './matcher/chat.entity';
+import { ImportersService } from './importers/importers.service';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { Chat } from './matcher/chat.entity';
       provide: APP_PIPE,
       useClass: ValidationPipe,
     },
+    ImportersService,
     // CommentsService, // TODO 넣으면 에러
     //Note that in terms of dependency injection, global pipes registered from outside of any module (with useGlobalPipes() as in the example above) cannot inject dependencies since the binding has been done outside the context of any module. In order to solve this issue, you can set up a global pipe directly from any module using the following construction:
   ],
