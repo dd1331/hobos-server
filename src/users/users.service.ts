@@ -10,6 +10,7 @@ import { PostsService } from '../posts/posts.service';
 import { Profile } from './users.type';
 import { CommentsService } from '../comments/comments.service';
 import { LikesService } from '../like/likes.service';
+import { CreateUserNaverDto } from './dto/create-user-naver.dto';
 
 @Injectable()
 export class UsersService {
@@ -30,6 +31,11 @@ export class UsersService {
     await this.userRepo.save(newUser);
 
     return newUser;
+  }
+
+  async createByNaverId(dto: CreateUserNaverDto): Promise<User> {
+    dto.password = randomWords();
+    return await this.create(dto);
   }
   //temp any
   async checkIfExist(dto: CreateUserDto): Promise<boolean> {
@@ -103,6 +109,10 @@ export class UsersService {
 
     if (!user) throw new HttpException('user not found', HttpStatus.NOT_FOUND);
 
+    return user;
+  }
+  async getUserByNaverId(naverId: string) {
+    const user = await this.userRepo.findOne({ naverId });
     return user;
   }
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {

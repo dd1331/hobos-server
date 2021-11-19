@@ -1,24 +1,33 @@
-import { Injectable, Res, Body } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-naver';
-import { AuthService } from '../auth.service';
-import { BulkedUser } from '../../users/users.type';
+import { PassportStrategy } from '@nestjs/passport';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
-export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
-  constructor(private authService: AuthService) {
+export class NaverStrategy extends PassportStrategy(Strategy) {
+  constructor(private readonly usersService: UsersService) {
     super({
-      clientID: 'ag_B0_vLXpvrgG1J5Upp',
-      callbackURL: 'http://192.168.35.123:3000/',
-      clientSecret: 'hE0MnzlWWk',
+      clientID: '4yYQ9GQnL3sH0JOpPXpS',
+      clientSecret: 'pYzHZT10jJ',
+      callbackURL: 'http://192.168.35.247:3000/auth/naver/callback',
     });
   }
+
   async validate(
     accessToken: string,
     refreshToken: string,
     profile: any,
-  ): Promise<BulkedUser> {
-    const user = { naverId: profile.id, accessToken };
+  ): Promise<any> {
+    const { id, provider } = profile;
+    const user = await this.usersService.getUserByNaverId(id);
+    if (!user) {
+      // const user = await this.usersService.createByNaverId({
+      //   provider,
+      //   naverId: profile.id,
+      // });
+      // return user;
+      throw new UnauthorizedException();
+    }
     return user;
   }
 }

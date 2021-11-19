@@ -38,7 +38,7 @@ export class AuthService {
   //   return { ...user, accessToken };
   // }
 
-  async validateUser(phone: string, password: string): Promise<User> {
+  async validateLocalUser(phone: string, password: string): Promise<User> {
     const user = await this.usersService.getUserByPhone(phone);
     const isEqual = await bcript.compare(password, user.password);
     if (user && isEqual) {

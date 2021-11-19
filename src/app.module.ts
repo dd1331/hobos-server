@@ -69,6 +69,7 @@ import { ImportersService } from './importers/importers.service';
       ],
       synchronize: true,
       dropSchema: process.env.NODE_ENV === 'test',
+      // dropSchema: true,
       // logging: true,
       // logging: ['error', 'log'],
     }),

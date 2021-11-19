@@ -30,7 +30,7 @@ export class User extends CommonEntity {
   @Column({ default: 'user' })
   role: string;
 
-  @Column({ default: 'normal' })
+  @Column({ default: 'local' })
   provider: string;
 
   @Column({ nullable: true })
