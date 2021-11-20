@@ -18,7 +18,7 @@ import { LocalAuthGuard } from './local/local-auth.guard';
 import { LoginDto } from './dto/login-dto';
 import { JwtAuthGuard } from './jwt-auth-guard';
 import { NaverAuthGuard } from './naver/naver.auth.guard';
-import { RedirectExceptionFilter } from 'src/filters/redirect-exception.filter';
+import { RedirectExceptionFilter } from '../filters/redirect-exception.filter';
 
 @Controller('auth')
 export class AuthController {
@@ -71,7 +71,7 @@ export class AuthController {
   async callback(@Req() req: Request, @Res() res: Response): Promise<any> {
     const { accessToken } = await this.authService.login(req.user);
     res.redirect(
-      `http://192.168.35.247:8080/callback?accessToken=${accessToken}`,
+      `${process.env.OAUTH_CALLBACK_URL_CLIENT}?accessToken=${accessToken}`,
     );
     return req.user;
   }

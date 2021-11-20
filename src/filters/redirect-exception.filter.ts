@@ -20,7 +20,7 @@ export class RedirectExceptionFilter implements ExceptionFilter {
     response
       .status(status)
       .redirect(
-        `http://192.168.35.247:8080/login/?message=${message}&url=${request.url}`,
+        `${process.env.CLIENT_URL}/login/?message=${message}&url=${request.url}`,
       );
     return response;
   }
