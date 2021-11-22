@@ -6,6 +6,10 @@ services:
       - "3000:3000"
     depends_on:
       - "hobos-db"
+    volumes:
+      - .:/app
+      - /app/node_modules # TODO check if it got faster adding this volume
+    command: npm run start:dev
   hobos-db:
     image: "mysql:8.0.27"
     command: --default-authentication-plugin=mysql_native_password

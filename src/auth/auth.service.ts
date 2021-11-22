@@ -4,7 +4,7 @@ import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { Request } from 'express';
 import { BulkedUser } from '../users/users.type';
-import * as bcript from 'bcrypt';
+import * as bcript from 'bcryptjs';
 
 @Injectable()
 export class AuthService {

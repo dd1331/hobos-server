@@ -5,7 +5,7 @@ import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as randomWords from 'random-words';
-import * as bcript from 'bcrypt';
+import * as bcript from 'bcryptjs';
 import { PostsService } from '../posts/posts.service';
 import { Profile } from './users.type';
 import { CommentsService } from '../comments/comments.service';
