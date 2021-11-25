@@ -7,3 +7,5 @@ services:
     volumes:
       - .:/app
       - /app/node_modules # TODO check if it got faster adding this volume
+    command: npm run start:prod
+    
