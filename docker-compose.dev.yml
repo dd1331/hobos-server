@@ -1,0 +1,19 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  hobos-server:
+    depends_on:
+      - "hobos-db"
+    command: npm run start:dev
+  hobos-db:
+    image: "mysql:8.0.27"
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - /var/lib/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+      MYSQL_ROOT_HOST: '${MYSQL_ROOT_HOST}'

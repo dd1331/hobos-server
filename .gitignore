@@ -38,3 +38,6 @@ lerna-debug.log*
 
 # mysql
 mysql/mysql_data
+
+#docker
+# docker-compose.dev.yml
