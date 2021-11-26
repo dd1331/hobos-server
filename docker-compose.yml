@@ -2,9 +2,10 @@ version: "3.9"  # optional since v1.27.0
 services:
   hobos-server:
     # build: .
+    image: dd1331/hobosserver
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules # TODO check if it got faster adding this volume
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules # TODO check if it got faster adding this volume
     command: npm run start:prod
