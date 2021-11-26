@@ -1,7 +1,7 @@
 version: "3.9"  # optional since v1.27.0
 services:
   hobos-server:
-    build: .
+    # build: .
     image: dd1331/hobosserver
     ports:
       - "3000:3000"
