@@ -2,6 +2,9 @@ version: "3.9"  # optional since v1.27.0
 services:
   hobos-server:
     build: .
+    volumes:
+      - .:/app
+      - /app/node_modules # TODO check if it got faster adding this volume
     depends_on:
       - "hobos-db"
     command: npm run start:dev
