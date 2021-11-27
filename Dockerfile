@@ -7,6 +7,7 @@ COPY ["package.json", "package-lock.json*", "./"]
 RUN npm install --production
 COPY . .
 RUN npm run build
+COPY . .
 
 # FROM node:14.9.0-alpine
 # WORKDIR /app
