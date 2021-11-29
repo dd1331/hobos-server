@@ -88,6 +88,36 @@ export class WingmanService {
     );
   }
   async uploadImage(createdPost: Post, url) {
+    return axios
+      .get(url, { responseType: 'arraybuffer' })
+      .then(async (response) => {
+        const path = 'wingmantest' + dayjs().valueOf().toString() + '.jpg';
+        const ContentLength = response.data.length.toString(); // or response.header["content-length"] if available for the type of file downloaded
+        const params = {
+          ContentType: response.headers['content-type'],
+          ContentLength,
+          Bucket: 'hobos',
+          Body: response.data,
+          Key: path,
+        };
+        const { Location, ETag, Key } = await this.filesService.uploadS3(
+          params,
+        );
+        const uploadFileDto = {
+          url: Location,
+          eTag: ETag,
+          key: Key,
+          size: ContentLength,
+          type: 'jpg',
+        };
+        const file = await this.filesService.createFile(uploadFileDto);
+        if (file) {
+          createdPost.files = [file];
+          await this.postRepo.save(createdPost);
+        }
+      });
+  }
+  async uploadImage2(createdPost: Post, url) {
     const path = 'wingmantest' + dayjs().valueOf().toString() + '.jpg';
     await axios({
       url,
@@ -112,7 +142,7 @@ export class WingmanService {
         throw new Error();
       }
       const params = {
-        Bucket: 'hobos-seoul',
+        Bucket: 'hobos',
         Key: path,
         Body: data,
         ContentType: 'image/jpeg',

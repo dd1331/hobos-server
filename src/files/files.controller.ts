@@ -21,6 +21,6 @@ export class FilesController {
     @Body() body: CreateFileDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.filesService.upload(file);
+    return this.filesService.uploadPostFile(file);
   }
 }
