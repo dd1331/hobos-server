@@ -31,6 +31,9 @@ import { RoomLog } from './matcher/room_log.entity';
 import { Room } from './matcher/room.entity';
 import { Chat } from './matcher/chat.entity';
 import { ImportersService } from './importers/importers.service';
+import { LocalsModule } from './locals/locals.module';
+import { AdminDistrict } from './locals/entities/admin_district.entity';
+import { Weather } from './locals/entities/weather.entity';
 
 @Module({
   imports: [
@@ -58,9 +61,11 @@ import { ImportersService } from './importers/importers.service';
         RoomLog,
         Room,
         Chat,
+        AdminDistrict,
+        Weather,
       ],
       synchronize: true,
-      dropSchema: process.env.NODE_ENV === 'test',
+      // dropSchema: process.env.NODE_ENV === 'test',
       // dropSchema: true,
       // logging: true,
       // logging: ['error', 'log'],
@@ -76,6 +81,7 @@ import { ImportersService } from './importers/importers.service';
     LikeModule,
     HashtagsModule,
     MatcherModule,
+    LocalsModule,
     // RedisCacheModule,
   ],
   controllers: [
