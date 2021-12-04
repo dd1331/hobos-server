@@ -34,6 +34,9 @@ describe('LocalsService', () => {
         expect(result.provinceName).toBeTruthy();
         expect(result.cityName).toBeTruthy();
         expect(result.townName).toBeFalsy();
+        expect(result.o3Value).toBeDefined();
+        expect(result.pm10Value).toBeDefined();
+        expect(result.pm25Value).toBeDefined();
       });
     });
   });
