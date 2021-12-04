@@ -37,6 +37,10 @@ describe('LocalsService', () => {
         expect(result.o3Value).toBeDefined();
         expect(result.pm10Value).toBeDefined();
         expect(result.pm25Value).toBeDefined();
+        expect(result.description).toBeDefined();
+        expect(result.temp).toBeDefined();
+        expect(result.feelsLike).toBeDefined();
+        expect(result.humidity).toBeDefined();
       });
     });
   });

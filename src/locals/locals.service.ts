@@ -12,21 +12,34 @@ export class LocalsService {
     @InjectRepository(Weather)
     private readonly weatherRepo: Repository<Weather>,
   ) {}
-  async getLocalRankingByCity(take = 9) {
+  async getLocalRankingByCity(take = 9): Promise<LocalRankingResult[]> {
     const cities = await this.adminDistrictRepo.find({
       where: { townCode: IsNull(), cityCode: Not(IsNull()) },
       take,
     });
-    const result = [];
+
+    const result: LocalRankingResult[] = [];
     const promises = cities.map(async (city) => {
-      const { o3Value, pm10Value, pm25Value } = await this.weatherRepo.findOne({
+      const weather = await this.weatherRepo.findOne({
         where: { cityName: city.cityName },
       });
-      result.push({ ...city, o3Value, pm10Value, pm25Value });
+
+      result.push({ ...city, ...weather });
+
       return city;
     });
+
     await Promise.all(promises);
-    console.log(result);
+
     return result;
   }
 }
+type LocalRankingResult = AdminDistrict & {
+  o3Value: number;
+  pm10Value: number;
+  pm25Value: number;
+  description: string;
+  temp: number;
+  feelsLike: number;
+  humidity: number;
+};
