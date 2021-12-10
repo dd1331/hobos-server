@@ -44,7 +44,10 @@ import { Weather } from './locals/entities/weather.entity';
       port: parseInt(process.env.DATABASE_PORT),
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
-      database: process.env.DATABASE_NAME,
+      database:
+        process.env.NODE_ENV === 'test'
+          ? process.env.TEST_DATABASE_NAME
+          : process.env.DATABASE_NAME,
       charset: 'utf8mb4',
       entities: [
         User,
@@ -64,7 +67,7 @@ import { Weather } from './locals/entities/weather.entity';
         Weather,
       ],
       synchronize: true,
-      // dropSchema: process.env.NODE_ENV === 'test',
+      dropSchema: process.env.NODE_ENV === 'test',
       // dropSchema: true,
       // logging: true,
       // logging: ['error', 'log'],

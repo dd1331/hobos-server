@@ -26,6 +26,7 @@ export class PostsController {
     private readonly likesService: LikesService,
   ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post('create')
   create(@Body() dto: CreatePostDto) {
     return this.postsService.createPost(dto);
@@ -62,11 +63,13 @@ export class PostsController {
     return this.postsService.readPost(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch()
   updatePost(@Body() dto: UpdatePostDto) {
     return this.postsService.updatePost(dto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   deletePost(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.deletePost(id);
