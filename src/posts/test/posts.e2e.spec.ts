@@ -59,47 +59,47 @@ describe('Posts', () => {
     };
 
     // TODO set createdAt for testing
-    const createPostDtoArray = [
+    const createPostDtoArray: CreatePostDto[] = [
       createPostDto,
       {
         ...createPostDto,
         title: '검색용',
-        category: 'excercise',
+        category: 'exercise',
         hashtags: ['검색용1', '검색용2'],
       },
       {
         ...createPostDto,
         title: '검색용',
-        category: 'excercise',
+        category: 'exercise',
         hashtags: ['검색용1', '검색용2'],
       },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'excercise' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
-      { ...createPostDto, category: 'enviroment' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'exercise' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
+      { ...createPostDto, category: 'environment' },
       { ...createPostDto, category: 'free' },
       { ...createPostDto, category: 'free' },
       { ...createPostDto, category: 'free' },
@@ -128,7 +128,7 @@ describe('Posts', () => {
         if (index < 3) {
           await likesService.likeOrDislike(createLikeDto, user);
         } else {
-          await postsService.getPost(post.id);
+          await postsService.readPostAndCount(post.id);
         }
       }),
     );
@@ -136,7 +136,7 @@ describe('Posts', () => {
       title: 'updated title',
       content: 'updated content',
       id: post.id,
-      poster: user.id.toString(),
+      poster: user.id,
     };
   });
   afterAll(async () => {
@@ -150,14 +150,16 @@ describe('Posts', () => {
         .send(createPostDto)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(HttpStatus.CREATED);
-      expect(body).toMatchObject(createPostDto);
+      expect(body.title).toBe(createPostDto.title);
+      expect(body.content).toBe(createPostDto.content);
     });
     it('create post with file', async () => {
       delete createPostDto.hashtags;
+      const fileId =
+        'https://hobos-seoul.s3.ap-northeast-2.amazonaws.com/credit_button.png';
       const dtoWithHashTag: CreatePostDto = {
         ...createPostDto,
-        fileId:
-          'https://hobos-seoul.s3.ap-northeast-2.amazonaws.com/credit_button.png',
+        fileId,
       };
       // TODO should i get created files and compare?
       const { body } = await request(agent)
@@ -165,19 +167,13 @@ describe('Posts', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send(dtoWithHashTag)
         .expect(HttpStatus.CREATED);
-      expect(body).toMatchObject(createPostDto);
-      const createLikeDto: CreateLikeDto = {
-        type: 'post',
-        isLike: true,
-        targetId: post.id,
-        userId: user.id,
-      };
-      await likesService.likeOrDislike(createLikeDto, user);
+      expect(body.fileId).toBe(fileId);
     });
     it('create post with hashtags', async () => {
+      const hashtags = ['test트렌드1', 'test트렌드5'];
       const dtoWithHashTag: CreatePostDto = {
         ...createPostDto,
-        hashtags: ['test트렌드1', 'test트렌드5'],
+        hashtags,
       };
       // TODO should i get created hashtags and compare?
       const { body } = await request(agent)
@@ -186,7 +182,7 @@ describe('Posts', () => {
 
         .send(dtoWithHashTag)
         .expect(HttpStatus.CREATED);
-      expect(body).toMatchObject(createPostDto);
+      expect(body.hashtags.length).toBe(hashtags.length);
     });
     each([
       // [content, title, category, expected]
@@ -238,8 +234,8 @@ describe('Posts', () => {
     const params = [
       // [category, take, page, hashtagId]
       ['free', 2, 1, 3],
-      ['excercise', 3, 1, 2],
-      ['enviroment', 3, 1, 0],
+      ['exercise', 3, 1, 2],
+      ['environment', 3, 1, 0],
     ];
     each(params).it(
       'should return post array',
@@ -266,7 +262,7 @@ describe('Posts', () => {
 
   describe('GET getPopularPosts', () => {
     it('should return popular posts', async () => {
-      await postsService.getPost(post.id);
+      await postsService.readPostAndCount(post.id);
       const { body } = await request(agent).get('/posts/popular');
       const createdArr = body.map((post) => {
         return post.createdAt;
@@ -305,9 +301,9 @@ describe('Posts', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send(updatePostDto)
         .expect(HttpStatus.OK);
-      expect({ ...body, poster: body.poster.id.toString() }).toMatchObject(
-        updatePostDto,
-      );
+      expect(body.id).toBe(updatePostDto.id);
+      expect(body.title).toBe(updatePostDto.title);
+      expect(body.content).toBe(updatePostDto.content);
     });
     const params = [
       // [ postId, title, content, expected, httpStatus ]
@@ -416,7 +412,7 @@ describe('Posts', () => {
       title: 'test',
       content: 'fff',
       poster: user.id,
-      category: '운동',
+      category: 'free',
     });
   };
 });

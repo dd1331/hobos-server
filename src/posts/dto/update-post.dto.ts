@@ -1,9 +1,9 @@
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdatePostDto {
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  poster: string;
+  poster: number;
 
   @IsNotEmpty()
   title: string;
@@ -18,5 +18,5 @@ export class UpdatePostDto {
   url?: string;
 
   @IsOptional()
-  fileId?: string;
+  fileId?: number;
 }

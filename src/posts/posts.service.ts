@@ -1,7 +1,5 @@
 import {
   Injectable,
-  HttpException,
-  HttpStatus,
   BadRequestException,
   Logger,
   NotFoundException,
@@ -32,19 +30,15 @@ export class PostsService {
   private readonly logger = new Logger(PostsService.name);
 
   async createPost(dto: CreatePostDto): Promise<Post> {
-    const newPost = await this.postRepo.create(dto);
+    const newPost = await this.postRepo.save(dto);
 
-    await this.postRepo.save(newPost);
-
-    if (!newPost)
-      throw new HttpException('글 작성에 실패했습니다', HttpStatus.BAD_REQUEST);
+    if (!newPost) throw new BadRequestException('글 작성에 실패했습니다');
 
     // TODO add to other methods
     if (dto.hashtags) await this.hashtagsService.create(newPost, dto);
 
     if (dto.fileId) {
-      const newFiles = await this.fileRepo.find({ where: { id: dto.fileId } });
-      newPost.files = newFiles;
+      newPost.files = await this.fileRepo.find({ where: { id: dto.fileId } });
     }
 
     await this.postRepo.save(newPost);
@@ -70,7 +64,7 @@ export class PostsService {
 
     return post;
   }
-  async getPost(id: number): Promise<Post> {
+  async readPostAndCount(id: number): Promise<Post> {
     const post = await this.getPostOrFail(id);
     post.views += 1;
 
@@ -257,10 +251,13 @@ export class PostsService {
 
     if (!existingPost) return;
 
-    const newFiles = await this.fileRepo.find({ where: { id: dto.fileId } });
     existingPost.title = title;
     existingPost.content = content;
-    existingPost.files = newFiles;
+    if (dto.fileId)
+      existingPost.files = await this.fileRepo.find({
+        where: { id: dto.fileId },
+      });
+
     const updatedPost = await this.postRepo.save(existingPost);
 
     return updatedPost;
