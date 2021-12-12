@@ -74,7 +74,7 @@ export class WingmanService {
       posts.map(async (post) => {
         const dto: CreatePostDto = {
           ...post,
-          poster: wingman.id.toString(),
+          poster: wingman.id,
           category: categories[Math.floor(Math.random() * categories.length)],
         };
         const createdPost = await this.postsService.createPostByWingman(dto);

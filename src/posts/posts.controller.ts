@@ -60,7 +60,7 @@ export class PostsController {
 
   @Get(':id')
   getPost(@Param('id', ParseIntPipe) id: number) {
-    return this.postsService.readPost(id);
+    return this.postsService.getPost(id);
   }
 
   @UseGuards(JwtAuthGuard)

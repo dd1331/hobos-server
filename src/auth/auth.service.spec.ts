@@ -1,12 +1,10 @@
-import { INestApplication, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { AppModule } from '../app.module';
 import { UsersService } from '../users/users.service';
-import { LoginDto } from '../auth/dto/login-dto';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { User } from '../users/entities/user.entity';
-import { JwtService, JwtModule } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { PostsService } from '../posts/posts.service';
 import { CommentsService } from '../comments/comments.service';
 import { LikesService } from '../like/likes.service';

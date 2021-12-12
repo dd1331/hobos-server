@@ -10,7 +10,7 @@ import { PostHashtag } from './post_hashtag.entity';
 @Entity()
 export class Post extends CommonEntity {
   @ManyToOne(() => User, (user) => user.posts)
-  poster: string;
+  poster: number;
 
   @Column()
   title: string;
@@ -22,7 +22,7 @@ export class Post extends CommonEntity {
   views: number;
 
   @Column()
-  category: string;
+  category: PostCategory;
 
   @Column({ default: 0, nullable: true, name: 'like_count' })
   likeCount: number;
@@ -45,3 +45,5 @@ export class Post extends CommonEntity {
   @OneToMany(() => PostHashtag, (postHashtag) => postHashtag.post)
   postHashtags: PostHashtag[];
 }
+
+export type PostCategory = 'free' | 'exercise' | 'environment' | 'meetup';

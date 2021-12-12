@@ -128,7 +128,7 @@ describe('Posts', () => {
         if (index < 3) {
           await likesService.likeOrDislike(createLikeDto, user);
         } else {
-          await postsService.readPost(post.id);
+          await postsService.getPost(post.id);
         }
       }),
     );
@@ -266,7 +266,7 @@ describe('Posts', () => {
 
   describe('GET getPopularPosts', () => {
     it('should return popular posts', async () => {
-      await postsService.readPost(post.id);
+      await postsService.getPost(post.id);
       const { body } = await request(agent).get('/posts/popular');
       const createdArr = body.map((post) => {
         return post.createdAt;

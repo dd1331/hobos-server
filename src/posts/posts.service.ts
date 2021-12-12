@@ -4,6 +4,7 @@ import {
   HttpStatus,
   BadRequestException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { Like as TLike } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -64,19 +65,13 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new HttpException(
-        '존재하지 않는 게시글입니다',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException('존재하지 않는 게시글입니다');
     }
-
-    await this.postRepo.save(post);
 
     return post;
   }
-  async readPost(id: number): Promise<Post> {
+  async getPost(id: number): Promise<Post> {
     const post = await this.getPostOrFail(id);
-
     post.views += 1;
 
     return await this.postRepo.save(post);

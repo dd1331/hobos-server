@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsOptional, IsArray, IsNumber } from 'class-validator';
+import { PostCategory } from '../entities/post.entity';
 
 export class CreatePostDto {
   @IsNumber()
@@ -12,7 +13,7 @@ export class CreatePostDto {
   content: string;
 
   @IsNotEmpty()
-  category: string;
+  category: PostCategory;
 
   @IsOptional()
   url?: string;
