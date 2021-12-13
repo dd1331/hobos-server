@@ -19,7 +19,7 @@ export class CreatePostDto {
   url?: string;
 
   @IsOptional()
-  fileId?: number;
+  fileId?: string;
 
   @IsOptional()
   @IsArray()

@@ -5,7 +5,7 @@ import { User } from '../../users/entities/user.entity';
 import { ChildComment } from '../../comments/entities/child_comment.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 
-enum LikeType {
+enum LikeEnum {
   POST = 'post',
   CITY = 'city',
   COMMENT = 'comment',
@@ -15,8 +15,8 @@ enum LikeType {
 export class Like extends CommonEntity {
   @Column({
     type: 'enum',
-    enum: LikeType,
-    default: LikeType.POST,
+    enum: LikeEnum,
+    default: LikeEnum.POST,
   })
   type: string;
 

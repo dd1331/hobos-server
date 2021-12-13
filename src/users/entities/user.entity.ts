@@ -7,6 +7,17 @@ import { ChildComment } from '../../comments/entities/child_comment.entity';
 import { RoomLog } from '../../matcher/room_log.entity';
 import { Chat } from '../../matcher/chat.entity';
 
+export enum ProviderEnum {
+  LOCAL = 'local',
+  NAVER = 'naver',
+  GOOGLE = 'google',
+  KAKAO = 'kakao',
+}
+export enum RoleEnum {
+  USER = 'user',
+  ADMIN = 'admin',
+  WINGMAN = 'wingman',
+}
 @Entity()
 export class User extends CommonEntity {
   @Column({ unique: true, name: 'user_id' })
@@ -27,11 +38,19 @@ export class User extends CommonEntity {
   @Column({ unique: true, nullable: true })
   phone: string;
 
-  @Column({ default: 'user' })
-  role: string;
+  @Column({
+    type: 'enum',
+    enum: RoleEnum,
+    default: RoleEnum.USER,
+  })
+  role: RoleEnum;
 
-  @Column({ default: 'local' })
-  provider: string;
+  @Column({
+    type: 'enum',
+    enum: ProviderEnum,
+    default: ProviderEnum.LOCAL,
+  })
+  provider: ProviderEnum;
 
   @Column({ nullable: true })
   avatar: string;

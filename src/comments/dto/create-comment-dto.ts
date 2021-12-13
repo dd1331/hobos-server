@@ -4,8 +4,8 @@ export class CreateCommentDto {
   @IsInt()
   postId: number;
 
-  @IsInt()
-  commenterId: number;
+  // @IsInt()
+  // commenterId: number;
 
   @IsNotEmpty()
   content: string;

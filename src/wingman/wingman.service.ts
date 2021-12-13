@@ -10,7 +10,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import * as dayjs from 'dayjs';
 import { FilesService } from '../files/files.service';
 import { S3 } from 'aws-sdk';
-import { Post } from '../posts/entities/post.entity';
+import { Post, PostCategory } from '../posts/entities/post.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -67,7 +67,12 @@ export class WingmanService {
   private async createPostsByWingman(
     posts: { title: string; content: string; src?: string }[],
   ) {
-    const categories = ['free', 'exercise', 'environment', 'meetup'];
+    const categories: PostCategory[] = [
+      'free',
+      'exercise',
+      'environment',
+      'meetup',
+    ];
     const users: User[] = await this.usersService.findWingmanUsers();
     const wingman: User = users[Math.floor(Math.random() * users.length)];
     await Promise.all(

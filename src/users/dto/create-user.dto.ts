@@ -1,4 +1,4 @@
-import { User } from '../entities/user.entity';
+import { User, RoleEnum } from '../entities/user.entity';
 import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateUserDto extends PartialType(User) {
@@ -6,5 +6,5 @@ export class CreateUserDto extends PartialType(User) {
   userName?: string;
   password?: string;
   phone?: string;
-  role?: string;
+  role?: RoleEnum;
 }

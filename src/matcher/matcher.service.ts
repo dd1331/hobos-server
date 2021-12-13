@@ -50,7 +50,8 @@ export class MatcherService {
       userName: user.userName,
       roomId: room.id,
     });
-    return await chat.save();
+
+    return await this.chatRepo.save(chat);
   }
 
   async getChatByRoomId(roomId): Promise<Chat[]> {

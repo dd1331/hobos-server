@@ -4,7 +4,6 @@ import {
   Post,
   Req,
   Get,
-  Redirect,
   Body,
   HttpCode,
   Res,
@@ -19,6 +18,8 @@ import { LoginDto } from './dto/login-dto';
 import { JwtAuthGuard } from './jwt-auth-guard';
 import { NaverAuthGuard } from './naver/naver.auth.guard';
 import { RedirectExceptionFilter } from '../filters/redirect-exception.filter';
+import { UserContext } from '../users/user.decorator';
+import { User } from '../users/entities/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -27,13 +28,6 @@ export class AuthController {
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleAuth(@Req() req) {}
-
-  @Get('google/redirect')
-  @UseGuards(AuthGuard('google'))
-  @Redirect('http://localhost:8080')
-  googleAuthRedirect(@Req() req) {
-    return this.authService.googleLogin(req);
-  }
 
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
@@ -68,12 +62,15 @@ export class AuthController {
   @UseFilters(RedirectExceptionFilter)
   @UseGuards(NaverAuthGuard)
   @Get('naver/callback')
-  async callback(@Req() req: Request, @Res() res: Response): Promise<any> {
-    const { accessToken } = await this.authService.login(req.user);
+  async callback(
+    @UserContext() user: User,
+    @Res() res: Response,
+  ): Promise<any> {
+    const { accessToken } = await this.authService.login(user);
     res.redirect(
       `${process.env.OAUTH_CALLBACK_URL_CLIENT}?accessToken=${accessToken}`,
     );
-    return req.user;
+    return user;
   }
 
   @Get('naver/redirect')

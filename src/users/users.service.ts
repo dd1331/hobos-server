@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { User, RoleEnum } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as randomWords from 'random-words';
@@ -58,7 +58,7 @@ export class UsersService {
 
   async findWingmanUsers(): Promise<User[]> {
     const users: User[] = await this.userRepo.find({
-      where: { role: 'wingman' },
+      where: { role: RoleEnum.WINGMAN },
     });
     // TODO SEED database instead of hard coding
     if (users.length === 0) {
@@ -66,7 +66,7 @@ export class UsersService {
         phone: '01099999999',
         userName: 'test',
         password: '1331',
-        role: 'wingman',
+        role: RoleEnum.WINGMAN,
       };
       users.push(await this.create(dto));
     }

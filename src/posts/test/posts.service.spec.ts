@@ -68,8 +68,6 @@ describe('PostsService', () => {
       ],
     }).compile();
     postsService = module.get<PostsService>(PostsService);
-    usersService = module.get<UsersService>(UsersService);
-    repo = module.get<Repository<Post>>(getRepositoryToken(Post));
   });
 
   describe('readPostAndCount', () => {
