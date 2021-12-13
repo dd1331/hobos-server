@@ -120,10 +120,10 @@ export class LikesService {
       return await this.postsService.getPostOrFail(dto.targetId);
 
     if (dto.type === COMMENT)
-      return await this.commentsService.readComment(dto.targetId);
+      return await this.commentsService.getCommentOrFail(dto.targetId);
 
     if (dto.type === CHILD_COMMENT)
-      return await this.commentsService.readChildComment(dto.targetId);
+      return await this.commentsService.getChildComment(dto.targetId);
   }
   async saveTarget(dto: CreateLikeDto, target: LikeTarget) {
     if (dto.type === POST) await this.postRepo.save(target);

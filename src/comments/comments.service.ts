@@ -1,4 +1,9 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comment } from './entities/comment.entity';
 import { Repository } from 'typeorm';
@@ -33,18 +38,26 @@ export class CommentsService {
   async createChildComment(
     dto: CreateChildCommentDto,
     commenter: User,
-  ): Promise<ChildComment> {
+  ): Promise<ChildComment & Partial<Comment>> {
+    const comment = await this.addChildCount(dto);
+
     const childComment = await this.childCommentRepo.create(dto);
-    const parentComment = await this.readComment(dto.parentId);
     const post = await this.postsService.getPostOrFail(dto.postId);
-    parentComment.childCount += 1;
-    await this.commentRepo.save(parentComment);
+
     childComment.post = post;
     childComment.commenter = commenter;
-    await this.childCommentRepo.save(childComment);
 
-    return childComment;
+    await this.childCommentRepo.save(childComment);
+    await this.commentRepo.save(comment);
+
+    return { ...childComment, childCount: comment.childCount };
   }
+  private async addChildCount(dto: CreateChildCommentDto) {
+    const parentComment = await this.getCommentOrFail(dto.parentId);
+    parentComment.childCount += 1;
+    return parentComment;
+  }
+
   async getActiveComments(postId: number): Promise<Comment[]> {
     const comments: Comment[] = await this.commentRepo.find({
       where: { postId },
@@ -52,25 +65,28 @@ export class CommentsService {
     });
 
     if (!comments) {
-      throw new HttpException('댓글이 존재하지 않습니다', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        '댓글이 존재하지 않습니다',
+        HttpStatus.NO_CONTENT,
+      );
     }
 
     return comments;
   }
-  async readComment(commentId: number): Promise<Comment> {
-    const comment = await this.commentRepo.findOne(commentId);
+  async getCommentOrFail(id: number): Promise<Comment> {
+    const comment = await this.commentRepo.findOne(id);
 
     if (!comment) {
-      throw new HttpException('댓글이 존재하지 않습니다', HttpStatus.NOT_FOUND);
+      throw new NotFoundException('댓글이 존재하지 않습니다');
     }
 
     return comment;
   }
-  async readChildComment(commentId: number): Promise<ChildComment> {
-    const comment = await this.childCommentRepo.findOne(commentId);
+  async getChildComment(id: number): Promise<ChildComment> {
+    const comment = await this.childCommentRepo.findOne(id);
 
     if (!comment) {
-      throw new HttpException('댓글이 존재하지 않습니다', HttpStatus.NOT_FOUND);
+      throw new NotFoundException('댓글이 존재하지 않습니다');
     }
 
     return comment;
@@ -84,7 +100,7 @@ export class CommentsService {
     return comments;
   }
   async updateComment(dto: UpdateCommentDto): Promise<Comment> {
-    const comment = await this.readComment(dto.id);
+    const comment = await this.getCommentOrFail(dto.id);
 
     if (!comment) return;
 
@@ -95,7 +111,7 @@ export class CommentsService {
   }
 
   async deleteComment(commentId: number): Promise<Comment> {
-    const comment = await this.readComment(commentId);
+    const comment = await this.getCommentOrFail(commentId);
 
     if (!comment) return;
 
@@ -104,27 +120,44 @@ export class CommentsService {
 
     return comment;
   }
-  async deleteChildComment(commentId: number): Promise<ChildComment> {
-    const comment = await this.childCommentRepo.findOne(commentId);
+  async deleteChildComment(
+    commentId: number,
+  ): Promise<ChildComment & Partial<Comment>> {
+    const comment = await this.getChildComment(commentId);
 
     if (!comment) return;
 
-    const parent = await this.commentRepo.findOne(comment.parentId);
-    parent.childCount -= 1;
+    const parent = await this.subtractChildCount(comment);
+
     comment.deletedAt = new Date();
     await this.commentRepo.save(parent);
     await this.childCommentRepo.save(comment);
 
-    return comment;
+    return { ...comment, childCount: parent.childCount };
   }
-  async getCommentSumByUserId(id: number): Promise<number> {
-    const parentSum = await this.commentRepo.count({
-      where: { commenter: id },
-    });
-    const childSum = await this.childCommentRepo.count({
-      where: { commenter: id },
-    });
 
-    return parentSum + childSum;
+  private async subtractChildCount(comment: ChildComment) {
+    const parent = await this.commentRepo.findOne(comment.parentId);
+    parent.childCount -= 1;
+    return parent;
+  }
+
+  async getCommentSumByUserId(id: number): Promise<number> {
+    const commentSum = await this.getCommentSum(id);
+    const childCommentSum = await this.getChildCommentSum(id);
+
+    return commentSum + childCommentSum;
+  }
+
+  private async getChildCommentSum(id: number) {
+    return await this.childCommentRepo.count({
+      where: { commenter: id },
+    });
+  }
+
+  private async getCommentSum(id: number) {
+    return await this.commentRepo.count({
+      where: { commenter: id },
+    });
   }
 }
