@@ -30,9 +30,6 @@ import { MatcherModule } from './matcher/matcher.module';
 import { RoomLog } from './matcher/room_log.entity';
 import { Room } from './matcher/room.entity';
 import { Chat } from './matcher/chat.entity';
-import { LocalsModule } from './locals/locals.module';
-import { AdminDistrict } from './locals/entities/admin_district.entity';
-import { Weather } from './locals/entities/weather.entity';
 
 @Module({
   imports: [
@@ -63,8 +60,6 @@ import { Weather } from './locals/entities/weather.entity';
         RoomLog,
         Room,
         Chat,
-        AdminDistrict,
-        Weather,
       ],
       synchronize: true,
       dropSchema: process.env.NODE_ENV === 'test',
@@ -83,7 +78,6 @@ import { Weather } from './locals/entities/weather.entity';
     LikeModule,
     HashtagsModule,
     MatcherModule,
-    LocalsModule,
     // RedisCacheModule,
   ],
   controllers: [
