@@ -21,7 +21,7 @@ export class FilesService {
   async uploadPostFile(file: Express.Multer.File): Promise<File> {
     const { originalname, size, mimetype, buffer } = file;
     const params = {
-      Bucket: 'hobos',
+      Bucket: 'hobos/image',
       Key: originalname,
       Body: buffer,
     };
