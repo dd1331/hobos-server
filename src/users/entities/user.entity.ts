@@ -6,6 +6,7 @@ import { Like } from '../../like/entities/like.entity';
 import { ChildComment } from '../../comments/entities/child_comment.entity';
 import { RoomLog } from '../../matcher/room_log.entity';
 import { Chat } from '../../matcher/chat.entity';
+import { Review } from '../../locals/entities/review.entity';
 
 export enum ProviderEnum {
   LOCAL = 'local',
@@ -72,4 +73,7 @@ export class User extends CommonEntity {
 
   @OneToMany(() => Chat, (chat) => chat.userId)
   chat: [Chat];
+
+  @OneToMany(() => Review, (review) => review.user)
+  reviews: [Review];
 }
