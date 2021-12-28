@@ -20,7 +20,7 @@ export class LocalsService {
         userId: user.id,
       });
 
-      await this.reviewRepo.save({ reviewId: data.id, user });
+      await this.reviewRepo.save({ reviewId: data.id, user, type: dto.type });
 
       return data;
     } catch (error) {

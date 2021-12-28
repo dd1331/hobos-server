@@ -42,7 +42,8 @@ describe('LocalsService', () => {
     it('유효성 체크', async () => {
       const messages = [
         'content 값이 존재하지 않습니다',
-        'cityCode 값이 존재하지 않습니다',
+        'code 값이 존재하지 않습니다',
+        'type 값이 존재하지 않습니다',
       ];
       const { body } = await request(agent)
         .post('/locals/review')

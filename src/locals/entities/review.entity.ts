@@ -10,4 +10,7 @@ export class Review extends CommonEntity {
 
   @Column({ nullable: false })
   reviewId: number;
+
+  @Column()
+  type: 'local' | 'cafe';
 }
