@@ -69,7 +69,7 @@ jobs:
         with:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.meta.outputs.labels }}
+          image: dd1331/hobosserver:main
 
 
       - name: Deploy Amazon ECS task definition
