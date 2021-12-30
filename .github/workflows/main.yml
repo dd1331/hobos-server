@@ -57,8 +57,8 @@ jobs:
       - name: echo
         run: echo ${{ steps.meta.outputs.tags }}
 
-      - name: echo2
-        run: echo ${{ steps.meta.outputs.labels }}
+      # - name: echo2
+      #   run: echo ${{ steps.meta.outputs.labels }}
 
       - name: echo3
         run: echo ${{ steps.build-image.metadata }}
