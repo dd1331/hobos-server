@@ -55,10 +55,13 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: echo
-        run: echo ${{ steps.meta.outputs }}
+        run: echo ${{ steps.meta.outputs.tags }}
 
       - name: echo2
-        run: echo ${{ steps.build-image.outputs }}
+        run: echo ${{ steps.meta.outputs.labels }}
+
+      - name: echo3
+        run: echo ${{ steps.build-image.metadata }}
           
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
@@ -66,7 +69,7 @@ jobs:
         with:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.digest }}
+          image: ${{ steps.meta.outputs.labels }}
 
 
       - name: Deploy Amazon ECS task definition
