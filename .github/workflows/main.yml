@@ -48,6 +48,8 @@ jobs:
 
       - name: echo
         run: echo ${{ steps.meta.outputs }}
+
+      - name: echo2
         run: echo ${{ steps.build-image.outputs }}
           
       - name: Fill in the new image ID in the Amazon ECS task definition
