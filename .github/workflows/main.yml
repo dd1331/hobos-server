@@ -10,7 +10,7 @@ on:
 #   workflow_dispatch:
 
 env:
-  AWS_REGION: ap-southeast-2                   # set this to your preferred AWS region, e.g. us-west-1
+  AWS_REGION: ap-northeast-2                   # set this to your preferred AWS region, e.g. us-west-1
   ECS_SERVICE: hobos-server-service                 # set this to your Amazon ECS service name
   ECS_CLUSTER: hobos                 # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: task-definition.json # set this to the path to your Amazon ECS task definition
