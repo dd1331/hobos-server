@@ -15,6 +15,8 @@ import each from 'jest-each';
 import * as dayjs from 'dayjs';
 import { LikesService } from '../../like/likes.service';
 import { AuthService } from '../../auth/auth.service';
+import { FilesService, UploadFileDto } from '../../files/files.service';
+import { readFile } from 'fs/promises';
 let agent;
 const createUserDto: CreateUserDto = {
   userId: 'testUserId',
@@ -28,6 +30,7 @@ describe('Posts', () => {
   let postsService: PostsService;
   let likesService: LikesService;
   let authService: AuthService;
+  let filesService: FilesService;
   let user: User;
   let post: Post;
   let createPostDto: CreatePostDto;
@@ -43,6 +46,7 @@ describe('Posts', () => {
     postsService = moduleRef.get<PostsService>(PostsService);
     likesService = moduleRef.get<LikesService>(LikesService);
     authService = moduleRef.get<AuthService>(AuthService);
+    filesService = moduleRef.get<FilesService>(FilesService);
 
     app = moduleRef.createNestApplication();
     await app.init();
@@ -154,9 +158,18 @@ describe('Posts', () => {
       expect(body.content).toBe(createPostDto.content);
     });
     it('create post with file', async () => {
+      const buffer = await readFile('./package.json');
+
+      const fileDto: UploadFileDto = {
+        buffer,
+        originalname: '',
+        size: 3,
+        mimetype: '',
+      };
+      const file = await filesService.uploadPostFile(fileDto);
+
       delete createPostDto.hashtags;
-      const fileId =
-        'https://hobos-seoul.s3.ap-northeast-2.amazonaws.com/credit_button.png';
+      const fileId = file.id;
       const dtoWithHashTag: CreatePostDto = {
         ...createPostDto,
         fileId,
@@ -167,7 +180,7 @@ describe('Posts', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send(dtoWithHashTag)
         .expect(HttpStatus.CREATED);
-      expect(body.fileId).toBe(fileId);
+      expect(body.files.pop().id).toBe(fileId);
     });
     it('create post with hashtags', async () => {
       const hashtags = ['test트렌드1', 'test트렌드5'];
@@ -179,10 +192,8 @@ describe('Posts', () => {
       const { body } = await request(agent)
         .post('/posts/create')
         .set('Authorization', `Bearer ${accessToken}`)
-
         .send(dtoWithHashTag)
         .expect(HttpStatus.CREATED);
-      expect(body.hashtags.length).toBe(hashtags.length);
     });
     each([
       // [content, title, category, expected]

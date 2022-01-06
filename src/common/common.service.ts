@@ -11,14 +11,17 @@ export class CommonService {
   ) {}
 
   async getCategories(type): Promise<Partial<Category>[]> {
-    const temp = [
-      { title: 'free' },
-      { title: 'exercise' },
-      { title: 'environment' },
-      { title: 'news' },
-      { title: 'meetup' },
-    ];
-    return temp;
-    // return await this.categoryRepo.find({ where: { type } });
+    const categories = await this.categoryRepo.find({ where: { type } });
+    if (!categories.length) {
+      return await this.initializeCategory(type);
+    }
+    return categories;
+  }
+  private async initializeCategory(type) {
+    const titles = ['free', 'meetup'];
+    const promises = titles.map((title) =>
+      this.categoryRepo.save({ type, title }),
+    );
+    return await Promise.all(promises);
   }
 }

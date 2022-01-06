@@ -11,14 +11,14 @@ export class FilesService {
     @InjectRepository(File)
     private readonly fileRepo: Repository<File>,
   ) {}
-  async createFile(dto: CreateFileDto): Promise<File> {
+  private async createFile(dto: CreateFileDto): Promise<File> {
     const createdFile = await this.fileRepo.create(dto);
 
     await this.fileRepo.save(createdFile);
 
     return createdFile;
   }
-  async uploadPostFile(file: Express.Multer.File): Promise<File> {
+  async uploadPostFile(file: UploadFileDto): Promise<File> {
     const { originalname, size, mimetype, buffer } = file;
     const params = {
       Bucket: 'hobos/image',
@@ -38,7 +38,7 @@ export class FilesService {
 
     return createdFile;
   }
-  async uploadS3(
+  private async uploadS3(
     params: S3.Types.PutObjectRequest,
   ): Promise<S3.ManagedUpload.SendData> {
     const s3 = this.getS3();
@@ -53,4 +53,10 @@ export class FilesService {
       region: 'ap-northeast-2',
     });
   }
+}
+export class UploadFileDto {
+  originalname: string;
+  size: number;
+  mimetype: string;
+  buffer: Buffer;
 }

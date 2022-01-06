@@ -54,14 +54,14 @@ describe('LocalsService', () => {
     it('로그인 정보 없음', async () => {
       const { body } = await request(agent)
         .post('/locals/review')
-        .send({ content: 'testes', cityCode: 11100 })
+        .send({ content: 'testes', code: 11100, type: 'local' })
         .expect(HttpStatus.UNAUTHORIZED);
     });
-    it('cityCode 유효하지 않음', async () => {
+    it('code 유효하지 않음', async () => {
       const { body } = await request(agent)
         .post('/locals/review')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ content: 'testes', cityCode: 111000 });
+        .send({ content: 'testes', code: 111000, type: 'local' });
       expect(body.statusCode).toBe(HttpStatus.NOT_FOUND);
       expect(body.message).toBe('지역정보가 존재하지 않습니다');
     });
@@ -69,7 +69,7 @@ describe('LocalsService', () => {
       const { body } = await request(agent)
         .post('/locals/review')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ content: 'testes', cityCode: 11100 })
+        .send({ content: 'testes', code: 11100, type: 'local' })
         .expect(HttpStatus.CREATED);
       expect(body.userId).toBe(user.id);
     });

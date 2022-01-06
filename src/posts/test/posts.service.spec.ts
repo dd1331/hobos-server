@@ -32,7 +32,7 @@ describe('PostsService', () => {
         return Promise.resolve({ id, views: 0 });
       },
       create: (dto: Partial<CreatePostDto>): Promise<Partial<Post>> => {
-        return Promise.resolve({ id: Date.now().valueOf(), ...dto });
+        return Promise.resolve({ ...dto });
       },
       save: (dto: Partial<Post>) => {
         return Promise.resolve({ ...dto });

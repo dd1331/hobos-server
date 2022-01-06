@@ -18,5 +18,5 @@ export class UpdatePostDto {
   url?: string;
 
   @IsOptional()
-  fileId?: string;
+  fileId?: number;
 }

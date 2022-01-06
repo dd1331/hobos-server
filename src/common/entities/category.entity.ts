@@ -4,7 +4,7 @@ import { CommonEntity } from '../../common.entity';
 @Entity()
 export class Category extends CommonEntity {
   @Column()
-  type: string;
-  @Column()
+  type: 'board';
+  @Column({ unique: true })
   title: string;
 }
