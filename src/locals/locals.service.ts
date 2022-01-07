@@ -15,7 +15,8 @@ export class LocalsService {
   private readonly logger = new Logger(LocalsService.name);
   async createReview(dto: CreateReviewDto, user: User) {
     try {
-      const { data } = await axios.post('http://localhost:4000/reviews', {
+      const URL = process.env.LOCAL_SERVICE_URL || 'http://localhost:4000';
+      const { data } = await axios.post(`${URL}/reviews`, {
         ...dto,
         userId: user.id,
       });

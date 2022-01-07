@@ -8,7 +8,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './jwt.strategy';
 import { NaverStrategy } from './naver/naver.strategy';
-import { GoogleStrategy } from './google/google.strategy';
 
 @Module({
   imports: [
@@ -19,13 +18,7 @@ import { GoogleStrategy } from './google/google.strategy';
       signOptions: { expiresIn: '60h' },
     }),
   ],
-  providers: [
-    AuthService,
-    LocalStrategy,
-    JwtStrategy,
-    NaverStrategy,
-    GoogleStrategy,
-  ],
+  providers: [AuthService, LocalStrategy, JwtStrategy, NaverStrategy],
   exports: [AuthService, JwtModule],
   controllers: [AuthController],
 })

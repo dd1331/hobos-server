@@ -19,6 +19,7 @@ import { Like } from '../../like/entities/like.entity';
 import { Chat } from '../../matcher/chat.entity';
 import { CreateChildCommentDto } from '../dto/create-child-comment-dto';
 import { NotFoundException } from '@nestjs/common';
+import { Review } from '../../locals/entities/review.entity';
 
 describe('CommentsService', () => {
   let commentsService: CommentsService;
@@ -42,6 +43,7 @@ describe('CommentsService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
+    reviews: [new Review()],
   };
 
   let mockedPostRepo;

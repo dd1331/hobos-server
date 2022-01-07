@@ -15,6 +15,8 @@ import { CreateChildCommentDto } from './dto/create-child-comment-dto';
 import { CreateLikeDto } from '../like/dto/create-like-dto';
 import { LikesService } from '../like/likes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth-guard';
+import { UserContext } from '../users/user.decorator';
+import { User } from '../users/entities/user.entity';
 
 @Controller('comments')
 export class CommentsController {
@@ -25,13 +27,13 @@ export class CommentsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('create')
-  create(@Body() dto: CreateCommentDto, @Req() req) {
-    return this.commentsService.createComment(dto, req.user);
+  create(@Body() dto: CreateCommentDto, @UserContext() user: User) {
+    return this.commentsService.createComment(dto, user);
   }
   @UseGuards(JwtAuthGuard)
   @Post('create-child')
-  createChild(@Body() dto: CreateChildCommentDto, @Req() req) {
-    return this.commentsService.createChildComment(dto, req.user);
+  createChild(@Body() dto: CreateChildCommentDto, @UserContext() user: User) {
+    return this.commentsService.createChildComment(dto, user);
   }
   @Get('fetch-children/:id')
   fetchChildren(@Param('id', ParseIntPipe) id: number) {

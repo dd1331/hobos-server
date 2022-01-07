@@ -10,7 +10,6 @@ import {
   UseFilters,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';
 import { BulkedUser } from '../users/users.type';
 import { LocalAuthGuard } from './local/local-auth.guard';
@@ -24,10 +23,6 @@ import { User } from '../users/entities/user.entity';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req) {}
 
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)

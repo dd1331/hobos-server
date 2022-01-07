@@ -11,7 +11,7 @@ export class FilesService {
     @InjectRepository(File)
     private readonly fileRepo: Repository<File>,
   ) {}
-  private async createFile(dto: CreateFileDto): Promise<File> {
+  async createFile(dto: CreateFileDto): Promise<File> {
     const createdFile = await this.fileRepo.create(dto);
 
     await this.fileRepo.save(createdFile);
@@ -38,7 +38,7 @@ export class FilesService {
 
     return createdFile;
   }
-  private async uploadS3(
+  async uploadS3(
     params: S3.Types.PutObjectRequest,
   ): Promise<S3.ManagedUpload.SendData> {
     const s3 = this.getS3();

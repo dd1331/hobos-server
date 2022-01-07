@@ -12,6 +12,7 @@ import { CreateUserDto } from '../../users/dto/create-user.dto';
 import { Comment } from '../entities/comment.entity';
 import { AuthService } from '../../auth/auth.service';
 import { BulkedUser } from '../../users/users.type';
+import { CreatePostDto } from '../../posts/dto/create-post.dto';
 
 describe('Comments', () => {
   let app: INestApplication;
@@ -90,7 +91,7 @@ describe('Comments', () => {
     return commentsService.createComment(createCommentDto, user);
   }
   function createPost(): Post | PromiseLike<Post> {
-    const createPostDto = {
+    const createPostDto: CreatePostDto = {
       poster: user.id,
       title: '트렌드 test',
       content: 'trend content 1',
