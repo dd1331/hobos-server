@@ -77,13 +77,12 @@ export class PostsService {
     const where = dto.category ? { category: dto.category } : {};
 
     if (dto.hashtagId || dto.hashtagTitle) {
-      const postIds: number[] = await this.hashtagsService.getPostIdsByHashtag(
+      const postIds = await this.hashtagsService.getPostIdsByHashtag(
         dto.hashtagId ? dto.hashtagId : dto.hashtagTitle,
         dto.hashtagId ? 'hashtagId' : 'postId',
       );
       where['id'] = In(postIds);
     }
-
     const posts = await this.postRepo.find({
       where,
       relations: ['poster', 'comments', 'files'],

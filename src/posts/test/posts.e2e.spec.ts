@@ -6,9 +6,8 @@ import { UsersService } from '../../users/users.service';
 import { User } from '../../users/entities/user.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { PostsService } from '../posts.service';
-import { Post } from '../entities/post.entity';
+import { Post, PostCategory } from '../entities/post.entity';
 import { UpdatePostDto } from '../dto/update-post.dto';
-import { CreateUserDto } from '../../users/dto/create-user.dto';
 import { CreateLikeDto } from '../../like/dto/create-like-dto';
 import { GetPostsDto } from '../dto/get-posts.dto';
 import each from 'jest-each';
@@ -18,144 +17,65 @@ import { AuthService } from '../../auth/auth.service';
 import { FilesService, UploadFileDto } from '../../files/files.service';
 import { readFile } from 'fs/promises';
 let agent;
-const createUserDto: CreateUserDto = {
-  userId: 'testUserId',
-  userName: 'testUserName',
-  password: '123123',
-  phone: '01000000002',
-};
 describe('Posts', () => {
-  let app: INestApplication;
-  let usersService: UsersService;
-  let postsService: PostsService;
-  let likesService: LikesService;
-  let authService: AuthService;
   let filesService: FilesService;
+  let postsService: PostsService;
   let user: User;
   let post: Post;
-  let createPostDto: CreatePostDto;
-  let updatePostDto: UpdatePostDto;
+  let SampleCreatePostDto: CreatePostDto;
   let accessToken: string;
+  let createPost;
+  let app: INestApplication;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    usersService = moduleRef.get<UsersService>(UsersService);
+    const usersService = moduleRef.get<UsersService>(UsersService);
+    const likesService = moduleRef.get<LikesService>(LikesService);
+    const authService = moduleRef.get<AuthService>(AuthService);
     postsService = moduleRef.get<PostsService>(PostsService);
-    likesService = moduleRef.get<LikesService>(LikesService);
-    authService = moduleRef.get<AuthService>(AuthService);
     filesService = moduleRef.get<FilesService>(FilesService);
+    createPost = async (category: PostCategory) => {
+      return await postsService.createPost({
+        title: 'test',
+        content: 'fff',
+        poster: user.id,
+        category: category || 'free',
+      });
+    };
 
     app = moduleRef.createNestApplication();
     await app.init();
     agent = app.getHttpServer();
-    user = await usersService.create(createUserDto);
+    user = await getSampleUser(user, usersService);
     accessToken = await (await authService.login(user)).accessToken;
 
-    createPostDto = {
-      poster: user.id,
-      title: '트렌드 test',
-      content: 'trend content 1',
-      category: 'free',
-      hashtags: ['해시태그 테스트1', 'test트렌드5'],
-    };
+    SampleCreatePostDto = getSampleCreatePostDto(SampleCreatePostDto, user);
 
     // TODO set createdAt for testing
-    const createPostDtoArray: CreatePostDto[] = [
-      createPostDto,
-      {
-        ...createPostDto,
-        title: '검색용',
-        category: 'exercise',
-        hashtags: ['검색용1', '검색용2'],
-      },
-      {
-        ...createPostDto,
-        title: '검색용',
-        category: 'exercise',
-        hashtags: ['검색용1', '검색용2'],
-      },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'exercise' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'environment' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-      { ...createPostDto, category: 'free' },
-    ];
-    await Promise.all(
-      createPostDtoArray.map(async (item, index) => {
-        post = await postsService.createPost(item);
-        const createLikeDto: CreateLikeDto = {
-          type: 'post',
-          isLike: true,
-          targetId: post.id,
-          userId: user.id,
-        };
-        if (index < 3) {
-          await likesService.likeOrDislike(createLikeDto, user);
-        } else {
-          await postsService.readPostAndCount(post.id);
-        }
-      }),
+    post = await createLikedPosts(
+      SampleCreatePostDto,
+      post,
+      postsService,
+      user,
+      likesService,
     );
-    updatePostDto = {
-      title: 'updated title',
-      content: 'updated content',
-      id: post.id,
-      poster: user.id,
-    };
   });
   afterAll(async () => {
     await app.close();
   });
   describe('/POST createPost', () => {
     it('created post with no extra ', async () => {
-      delete createPostDto.hashtags;
+      const { hashtags, ...simpleCreatePostDto } = SampleCreatePostDto;
       const { body } = await request(agent)
         .post('/posts/create')
-        .send(createPostDto)
+        .send(simpleCreatePostDto)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(HttpStatus.CREATED);
-      expect(body.title).toBe(createPostDto.title);
-      expect(body.content).toBe(createPostDto.content);
+      expect(body.title).toBe(SampleCreatePostDto.title);
+      expect(body.content).toBe(SampleCreatePostDto.content);
     });
     it('create post with file', async () => {
       const buffer = await readFile('./package.json');
@@ -166,26 +86,25 @@ describe('Posts', () => {
         size: 3,
         mimetype: '',
       };
-      const file = await filesService.uploadPostFile(fileDto);
+      const { id } = await filesService.uploadPostFile(fileDto);
 
-      delete createPostDto.hashtags;
-      const fileId = file.id;
-      const dtoWithHashTag: CreatePostDto = {
-        ...createPostDto,
+      const fileId = id;
+      const dtoWittFile: CreatePostDto = {
+        ...SampleCreatePostDto,
         fileId,
       };
       // TODO should i get created files and compare?
       const { body } = await request(agent)
         .post('/posts/create')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send(dtoWithHashTag)
+        .send(dtoWittFile)
         .expect(HttpStatus.CREATED);
       expect(body.files.pop().id).toBe(fileId);
     });
     it('create post with hashtags', async () => {
       const hashtags = ['test트렌드1', 'test트렌드5'];
       const dtoWithHashTag: CreatePostDto = {
-        ...createPostDto,
+        ...SampleCreatePostDto,
         hashtags,
       };
       // TODO should i get created hashtags and compare?
@@ -196,29 +115,26 @@ describe('Posts', () => {
         .expect(HttpStatus.CREATED);
     });
     each([
-      // [content, title, category, expected]
-      ['', '', '', HttpStatus.BAD_REQUEST],
-      ['test content', '', 'free', HttpStatus.BAD_REQUEST],
-      ['', 'test title', 'free', HttpStatus.BAD_REQUEST],
-      ['test1', 'test2', '', HttpStatus.BAD_REQUEST],
-      ['valid title', 'valid content', 'free', HttpStatus.CREATED],
+      ['', '', '', 3],
+      ['test content', '', 'free', 1],
+      ['', 'test title', 'free', 1],
+      ['test1', 'test2', '', 1],
     ]).test(
       'should throw an error if has invalid value',
-      async (content, title, category, expected) => {
+      async (content, title, category, expectedErrorCount) => {
         const invalidCreatePostDto: CreatePostDto = {
           poster: user.id,
           content,
           title,
           category,
         };
-        await request(agent)
+        const { body } = await request(agent)
           .post('/posts/create')
           .set('Authorization', `Bearer ${accessToken}`)
-
           .send(invalidCreatePostDto)
-          .expect(expected);
+          .expect(HttpStatus.BAD_REQUEST);
         // TODO check file size and hashtag validation
-        // expect(body.message).toHaveLength(2); // title, content
+        expect(body.message).toHaveLength(expectedErrorCount);
       },
     );
   });
@@ -229,10 +145,10 @@ describe('Posts', () => {
       ['das', HttpStatus.BAD_REQUEST],
       [null, HttpStatus.BAD_REQUEST],
       [99999999, HttpStatus.NOT_FOUND],
+      [-99999999, HttpStatus.NOT_FOUND],
       // TODO return bad request for negative integer and one exceeding maximum value,
       // seems like parseInt pipe is handling exceeding int value
-      [-99999999, HttpStatus.NOT_FOUND],
-      // [999999999999999999999, HttpStatus.NOT_FOUND],
+      // [9999999999999999999999, HttpStatus.NOT_FOUND],
     ];
     each(params).it('validate get post param', async (postId, expected) => {
       const { body } = await request(agent)
@@ -243,19 +159,22 @@ describe('Posts', () => {
   });
   describe('/GET getPosts', () => {
     const params = [
-      // [category, take, page, hashtagId]
-      ['free', 2, 1, 3],
-      ['exercise', 3, 1, 2],
-      ['environment', 3, 1, 0],
+      ['free', 2, 1],
+      ['exercise', 3, 1],
+      ['environment', 3, 1],
     ];
     each(params).it(
       'should return post array',
-      async (category, take, page, hashtagId) => {
+      async (category, take, page) => {
+        await createSamplePost(category, postsService, user);
+        await createSamplePost(category, postsService, user);
+        await createSamplePost(category, postsService, user);
+        await createSamplePost(category, postsService, user);
+        await createSamplePost(category, postsService, user);
         const dto: GetPostsDto = {
           category,
           take,
           page,
-          hashtagId,
         };
         const { body } = await request(agent)
           .get('/posts')
@@ -265,8 +184,10 @@ describe('Posts', () => {
         if (take) expect(body.length).toBeLessThanOrEqual(take);
         if (!take) expect(body.length).toBeLessThanOrEqual(20);
         // TODO find a way of checking page
-        const categories = body.map((post) => post.category);
-        expect(categories.every((cg) => cg === category)).toEqual(true);
+        const hasSameCategory = body.every(
+          (post) => post.category === category,
+        );
+        expect(hasSameCategory).toBeTruthy();
       },
     );
   });
@@ -275,19 +196,14 @@ describe('Posts', () => {
     it('should return popular posts', async () => {
       await postsService.readPostAndCount(post.id);
       const { body } = await request(agent).get('/posts/popular');
-      const createdArr = body.map((post) => {
-        return post.createdAt;
-      });
-      const viewsArr = body.map((post) => {
-        return post.views;
-      });
-      const isWithinPeriod = createdArr.every((createdAt) => {
-        return dayjs(createdAt).isAfter(dayjs().subtract(7, 'd'));
-      });
-      const sortedViews = viewsArr.map((views) => views).sort((a, b) => b - a);
-      expect(isWithinPeriod).toBe(true);
+      const createdArr = body.map((post) => post.createdAt);
+      const viewsArr = body.map((post) => post.views);
+      const isWithinPeriod = createdArr.every((createdAt) =>
+        dayjs(createdAt).isAfter(dayjs().subtract(7, 'd')),
+      );
+      const sortedViews = viewsArr.sort((a, b) => b - a);
+      expect(isWithinPeriod).toBeTruthy();
       expect(sortedViews).toEqual(viewsArr);
-      expect(viewsArr[0]).toEqual(body[0].views);
     });
   });
 
@@ -298,15 +214,16 @@ describe('Posts', () => {
       const isWithinPeriod = createdArr.every((createdAt) =>
         dayjs(createdAt).isAfter(dayjs().subtract(7, 'd')),
       );
-      expect(isWithinPeriod).toBe(true);
+      expect(isWithinPeriod).toBeTruthy();
       const likes = body.map((post) => post.likeCount);
-      const sortedLikes = [...likes].sort((a, b) => b - a);
+      const sortedLikes = likes.sort((a, b) => b - a);
       expect(likes).toEqual(sortedLikes);
     });
   });
   describe('/PATCH updatePost', () => {
     // TODO set app context instead of sending poster
     it('should return updated post object', async () => {
+      const updatePostDto = getUpdatePostDto(post, user);
       const { body } = await request(agent)
         .patch('/posts')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -317,7 +234,6 @@ describe('Posts', () => {
       expect(body.content).toBe(updatePostDto.content);
     });
     const params = [
-      // [ postId, title, content, expected, httpStatus ]
       [null, '', '', 2, HttpStatus.BAD_REQUEST],
       [null, 'valid title', '', 1, HttpStatus.BAD_REQUEST],
       [null, '', 'valid content', 1, HttpStatus.BAD_REQUEST],
@@ -328,24 +244,30 @@ describe('Posts', () => {
     each(params).it(
       'should throw an error if data is not valid',
       async (postId, title, content, expected, httpStatus) => {
+        const updatePostDto = getUpdatePostDto(post, user);
         const invalidUpdatePostDto: UpdatePostDto = {
           ...updatePostDto,
           title,
           content,
         };
+
         if (postId) invalidUpdatePostDto.id = postId;
+
         const { body } = await request(agent)
           .patch('/posts')
           .set('Authorization', `Bearer ${accessToken}`)
           .send(invalidUpdatePostDto)
           .expect(httpStatus);
+
         if (httpStatus === HttpStatus.BAD_REQUEST)
           expect(body.message).toHaveLength(expected);
       },
     );
     it('should throw an error if the post is not existing', async () => {
-      const invalidUpdatePostDto: UpdatePostDto = { ...updatePostDto };
-      invalidUpdatePostDto.id = 99999;
+      const invalidUpdatePostDto: UpdatePostDto = {
+        ...getUpdatePostDto(post, user),
+      };
+      invalidUpdatePostDto.id = 99999999;
       const { body } = await request(agent)
         .patch('/posts')
         .set('Authorization', `Bearer ${accessToken}`)
@@ -368,6 +290,8 @@ describe('Posts', () => {
       // TODO find out a way of returning bad request using pipe when negative value is sent
       [-33, HttpStatus.NOT_FOUND],
       ['test', HttpStatus.BAD_REQUEST],
+      [null, HttpStatus.BAD_REQUEST],
+      [undefined, HttpStatus.BAD_REQUEST],
     ];
     each(params).it(
       'should throw an erorr if post does not exist or already deleted',
@@ -383,7 +307,7 @@ describe('Posts', () => {
     );
   });
 
-  // moved to like test
+  // move to like test
   describe('/POST likePost', () => {
     it('should return created like obejct', async () => {
       const post = await createPost();
@@ -418,12 +342,81 @@ describe('Posts', () => {
       expect(body.length).toBeGreaterThan(0);
     });
   });
-  const createPost = async () => {
-    return await postsService.createPost({
-      title: 'test',
-      content: 'fff',
-      poster: user.id,
-      category: 'free',
-    });
-  };
 });
+function getUpdatePostDto(post: Post, user: User): UpdatePostDto {
+  return {
+    title: 'updated title',
+    content: 'updated content',
+    id: post.id,
+    poster: user.id,
+  };
+}
+
+function getSampleCreatePostDto(
+  SampleCreatePostDto: CreatePostDto,
+  user: User,
+) {
+  SampleCreatePostDto = {
+    poster: user.id,
+    title: 'test title',
+    content: 'test content',
+    category: 'free',
+    hashtags: ['해시태그 테스트1', '해시태그 테스트2'],
+  };
+  return SampleCreatePostDto;
+}
+
+async function createLikedPosts(
+  SampleCreatePostDto: CreatePostDto,
+  post: Post,
+  postsService: PostsService,
+  user: User,
+  likesService: LikesService,
+) {
+  const createPostDtoArray: CreatePostDto[] = [
+    SampleCreatePostDto,
+    { ...SampleCreatePostDto, category: 'exercise' },
+    { ...SampleCreatePostDto, category: 'environment' },
+    { ...SampleCreatePostDto, category: 'free' },
+  ];
+  await Promise.all(
+    createPostDtoArray.map(async (item, index) => {
+      post = await postsService.createPost(item);
+      const createLikeDto: CreateLikeDto = getCreateLikeDto(post, user);
+      if (index < 3) await likesService.likeOrDislike(createLikeDto, user);
+      else await postsService.readPostAndCount(post.id);
+    }),
+  );
+  return post;
+}
+
+function getCreateLikeDto(post: Post, user: User): CreateLikeDto {
+  return {
+    type: 'post',
+    isLike: true,
+    targetId: post.id,
+    userId: user.id,
+  };
+}
+
+async function getSampleUser(user: User, usersService: UsersService) {
+  user = await usersService.create({
+    userId: 'testUserId',
+    userName: 'testUserName',
+    password: '123123',
+    phone: '01000000002',
+  });
+  return user;
+}
+async function createSamplePost(
+  category: PostCategory,
+  postsService: PostsService,
+  user: User,
+) {
+  return await postsService.createPost({
+    title: 'test',
+    content: 'fff',
+    poster: user.id,
+    category: category || 'free',
+  });
+}
