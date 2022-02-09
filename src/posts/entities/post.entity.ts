@@ -46,4 +46,4 @@ export class Post extends CommonEntity {
   postHashtags: PostHashtag[];
 }
 
-export type PostCategory = 'free' | 'exercise' | 'environment' | 'meetup';
+export type PostCategory = 'free' | 'meetup' | 'fire' | 'investment';

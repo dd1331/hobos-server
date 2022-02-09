@@ -1,18 +1,15 @@
-import * as fs from 'fs';
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
 import { PostsService } from '../posts/posts.service';
-import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as dayjs from 'dayjs';
 import { FilesService } from '../files/files.service';
-import { S3 } from 'aws-sdk';
-import { Post, PostCategory } from '../posts/entities/post.entity';
+import { Post } from '../posts/entities/post.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Category } from '../common/entities/category.entity';
 
 @Injectable()
 export class WingmanService {
@@ -21,6 +18,8 @@ export class WingmanService {
     private postsService: PostsService,
     private filesService: FilesService,
     @InjectRepository(Post) private readonly postRepo: Repository<Post>,
+    @InjectRepository(Category)
+    private readonly categoryRepo: Repository<Category>,
   ) {}
   private readonly logger = new Logger(WingmanService.name);
 
@@ -67,25 +66,23 @@ export class WingmanService {
   private async createPostsByWingman(
     posts: { title: string; content: string; src?: string }[],
   ) {
-    const categories: PostCategory[] = [
-      'free',
-      'exercise',
-      'environment',
-      'meetup',
-    ];
-    const users: User[] = await this.usersService.findWingmanUsers();
-    const wingman: User = users[Math.floor(Math.random() * users.length)];
+    const categories = await this.categoryRepo.find();
+    const wingmans = await this.usersService.findWingmanUsers();
+    const random = Math.floor(Math.random() * wingmans.length);
+    const poster = wingmans[random].id;
     await Promise.all(
       posts.map(async (post) => {
-        const dto: CreatePostDto = {
+        const random = Math.floor(Math.random() * categories.length);
+        const category = categories[random].title;
+        const dto = {
           ...post,
-          poster: wingman.id,
-          category: categories[Math.floor(Math.random() * categories.length)],
+          poster,
+          category,
         };
         const createdPost = await this.postsService.createPostByWingman(dto);
 
         if (post.src) {
-          await this.uploadImage(createdPost, post.src);
+          this.uploadImage(createdPost, post.src);
         }
 
         return createdPost;
@@ -96,7 +93,7 @@ export class WingmanService {
     return axios
       .get(url, { responseType: 'arraybuffer' })
       .then(async (response) => {
-        const path = 'wingmantest' + dayjs().valueOf().toString() + '.jpg';
+        const path = 'wingman' + dayjs().valueOf().toString() + '.jpg';
         const ContentLength = response.data.length.toString(); // or response.header["content-length"] if available for the type of file downloaded
         const params = {
           ContentType: response.headers['content-type'],
@@ -121,52 +118,6 @@ export class WingmanService {
           await this.postRepo.save(createdPost);
         }
       });
-  }
-  async uploadImage2(createdPost: Post, url) {
-    const path = 'wingmantest' + dayjs().valueOf().toString() + '.jpg';
-    await axios({
-      url,
-      responseType: 'stream',
-    }).then((res) => {
-      return new Promise((resolve, reject) => {
-        res.data
-          .pipe(fs.createWriteStream(path))
-          .on('finish', (r) => resolve(r))
-          .on('error', (e) => reject(e));
-      });
-    });
-    // TODO remove
-    const s3 = new S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: 'ap-northeast-2',
-    });
-    fs.readFile(path, async (err, data) => {
-      if (err) {
-        fs.unlinkSync(path);
-        throw new Error();
-      }
-      const params = {
-        Bucket: 'hobos',
-        Key: path,
-        Body: data,
-        ContentType: 'image/jpeg',
-      };
-      const { Location, ETag, Key } = await s3.upload(params).promise();
-      fs.unlinkSync(path);
-      const uploadFileDto = {
-        url: Location,
-        eTag: ETag,
-        key: Key,
-        size: 0,
-        type: 'jpg',
-      };
-      const file = await this.filesService.createFile(uploadFileDto);
-      if (file) {
-        createdPost.files = [file];
-        await this.postRepo.save(createdPost);
-      }
-    });
   }
   getUrlList($, $bodyList) {
     const urlPrefix = 'https://www.instiz.net';
