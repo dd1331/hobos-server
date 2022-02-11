@@ -23,16 +23,20 @@ export class WingmanService {
   ) {}
   private readonly logger = new Logger(WingmanService.name);
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_30_MINUTES)
   async crawlInstizFreeBoard() {
-    this.logger.debug(
-      `crawlInstizFreeBoard started ${WingmanService.name} ${Date.now()}`,
-    );
-    const listUrl = 'https://www.instiz.net/name?category=1';
-    const html = await this.getHtml(listUrl);
-    const posts = await this.getPostsValues(html);
-    // TODO temp
-    await this.createPostsByWingman(posts);
+    try {
+      this.logger.debug(
+        `crawlInstizFreeBoard started ${WingmanService.name} ${Date.now()}`,
+      );
+      const listUrl = 'https://www.instiz.net/name?category=1';
+      const html = await this.getHtml(listUrl);
+      const posts = await this.getPostsValues(html);
+      // TODO temp
+      await this.createPostsByWingman(posts);
+    } catch (error) {
+      console.log('WingmanService -> crawlInstizFreeBoard -> error', error);
+    }
   }
 
   private async getPostsValues(html) {
@@ -117,7 +121,8 @@ export class WingmanService {
           createdPost.files = [file];
           await this.postRepo.save(createdPost);
         }
-      });
+      })
+      .catch((err) => console.log('WingmanService -> uploadImage -> err'));
   }
   getUrlList($, $bodyList) {
     const urlPrefix = 'https://www.instiz.net';

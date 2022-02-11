@@ -21,7 +21,7 @@ export class UsersService {
     private readonly likesService: LikesService,
   ) {}
   async create(dto: CreateUserDto): Promise<User> {
-    await this.checkIfExist(dto);
+    await this.checkDuplication(dto);
 
     dto.password = await bcript.hash(dto.password, 12);
     dto.userId = randomWords() + 'ID';
@@ -37,8 +37,7 @@ export class UsersService {
     dto.password = randomWords();
     return await this.create(dto);
   }
-  //temp any
-  async checkIfExist(dto: CreateUserDto): Promise<boolean> {
+  async checkDuplication(dto: CreateUserDto): Promise<boolean> {
     const { phone } = dto;
     const where = [{ phone }];
     const isExisting = await this.userRepo.findOne({ where });
@@ -63,7 +62,7 @@ export class UsersService {
     // TODO SEED database instead of hard coding
     if (users.length === 0) {
       const dto: CreateUserDto = {
-        phone: '01099999999',
+        phone: '01099999998',
         userName: 'test',
         password: '1331',
         role: RoleEnum.WINGMAN,

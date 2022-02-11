@@ -26,7 +26,7 @@ const newUserParams = [
     userId: 'test id 2',
     userName: 'test2',
     password: '123123',
-    phone: '01000000002',
+    phone: '01032131233',
   },
 ];
 
@@ -51,13 +51,26 @@ describe('Users', () => {
       const response = await request(app.getHttpServer())
         .post('/users/signup')
         .send(newUser)
-        .expect(201);
+        .expect(HttpStatus.CREATED);
       const { userId, userName, phone, role } = response.body;
       expect(userId).toBeTruthy();
       expect(userName).toBeTruthy();
       expect(phone).toBe(newUser.phone);
       expect(role).toBe('user');
       createdUsers.push(response.body);
+    });
+
+    const invalidUsers = [
+      { ...newUserParams[0], phone: '00000000000' },
+      { ...newUserParams[0], phone: 'a07000000000' },
+      { ...newUserParams[0], phone: 'ㅇㅁㅇㄴㅁ000' },
+      { ...newUserParams[0], phone: '0319884592' },
+    ];
+    each(invalidUsers).it('phone is not valid', async (user) => {
+      await request(app.getHttpServer())
+        .post('/users/signup')
+        .send(user)
+        .expect(HttpStatus.BAD_REQUEST);
     });
   });
   describe('READ', () => {

@@ -375,8 +375,8 @@ async function createLikedPosts(
 ) {
   const createPostDtoArray: CreatePostDto[] = [
     SampleCreatePostDto,
-    { ...SampleCreatePostDto, category: 'exercise' },
-    { ...SampleCreatePostDto, category: 'environment' },
+    { ...SampleCreatePostDto, category: 'investment' },
+    { ...SampleCreatePostDto, category: 'fire' },
     { ...SampleCreatePostDto, category: 'free' },
   ];
   await Promise.all(
