@@ -74,4 +74,39 @@ describe('LocalsService', () => {
       expect(body.userId).toBe(user.id);
     });
   });
+  describe('리뷰 지우기', () => {
+    it('성공', async () => {
+      const { body } = await createReview(agent, accessToken);
+
+      await request(agent)
+        .delete(`/locals/review/${body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.OK);
+    });
+    it('존재하지 않는 경우 404', async () => {
+      const { body } = await request(agent)
+        .delete(`/locals/review/${99999}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NOT_FOUND);
+      expect(body.message).toBe('리뷰가 존재하지 않습니다');
+    });
+    it('숫자/숫자문자열 아닌 경우 400', async () => {
+      await request(agent)
+        .delete(`/locals/review/'fadsfdasf'`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+    it('토큰 없는 경우 401', async () => {
+      const { body } = await createReview(agent, accessToken);
+      await request(agent)
+        .delete(`/locals/review/${body.id}`)
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+  });
 });
+async function createReview(agent: any, accessToken: string) {
+  return await request(agent)
+    .post('/locals/review')
+    .set('Authorization', `Bearer ${accessToken}`)
+    .send({ content: 'testes', code: 11100, type: 'local' });
+}

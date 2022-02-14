@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Delete,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { LocalsService } from './locals.service';
@@ -13,5 +21,11 @@ export class LocalsController {
   @Post('review')
   create(@Body() dto: CreateReviewDto, @UserContext() user: User) {
     return this.localsService.createReview(dto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('review/:id')
+  removeReview(@Param('id', ParseIntPipe) id: number) {
+    return this.localsService.removeReview(id);
   }
 }
