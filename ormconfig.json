@@ -1,0 +1,14 @@
+{
+  "type": "mysql",
+  "host": "localhost",
+  "port": 3306,
+  "username": "charlie",
+  "password": "1331",
+  "database": "hobos",
+  "synchronize": false,
+  "entities": ["dist/src/**/*.entity.js"],
+  "migrations": ["dist/src/migrations/*.js"],
+  "cli": {
+    "migrationsDir": "src/migrations"
+  }
+}
