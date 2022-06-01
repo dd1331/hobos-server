@@ -6,8 +6,8 @@
   "password": "1331",
   "database": "hobos",
   "synchronize": false,
-  "entities": ["dist/src/**/*.entity.js"],
-  "migrations": ["dist/src/migrations/*.js"],
+  "entities": ["dist/**/*.entity.js"],
+  "migrations": ["dist/migrations/*.js"],
   "cli": {
     "migrationsDir": "src/migrations"
   }
