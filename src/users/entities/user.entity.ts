@@ -4,8 +4,6 @@ import { Post } from '../../posts/entities/post.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 import { Like } from '../../like/entities/like.entity';
 import { ChildComment } from '../../comments/entities/child_comment.entity';
-import { RoomLog } from '../../matcher/room_log.entity';
-import { Chat } from '../../matcher/chat.entity';
 import { Review } from '../../locals/entities/review.entity';
 
 export enum ProviderEnum {
@@ -67,12 +65,6 @@ export class User extends CommonEntity {
 
   @OneToMany(() => Like, (like) => like.user)
   likes: [Like];
-
-  @OneToMany(() => RoomLog, (roomLog) => roomLog.user)
-  roomLog: [RoomLog];
-
-  @OneToMany(() => Chat, (chat) => chat.userId)
-  chat: [Chat];
 
   @OneToMany(() => Review, (review) => review.user)
   reviews: [Review];

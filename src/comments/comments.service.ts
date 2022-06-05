@@ -74,7 +74,7 @@ export class CommentsService {
     return comments;
   }
   async getCommentOrFail(id: number): Promise<Comment> {
-    const comment = await this.commentRepo.findOne(id);
+    const comment = await this.commentRepo.findOne({ where: { id } });
 
     if (!comment) {
       throw new NotFoundException('댓글이 존재하지 않습니다');
@@ -83,7 +83,7 @@ export class CommentsService {
     return comment;
   }
   async getChildComment(id: number): Promise<ChildComment> {
-    const comment = await this.childCommentRepo.findOne(id);
+    const comment = await this.childCommentRepo.findOne({ where: { id } });
 
     if (!comment) {
       throw new NotFoundException('댓글이 존재하지 않습니다');
@@ -137,7 +137,9 @@ export class CommentsService {
   }
 
   private async subtractChildCount(comment: ChildComment) {
-    const parent = await this.commentRepo.findOne(comment.parentId);
+    const parent = await this.commentRepo.findOne({
+      where: { id: comment.parentId },
+    });
     parent.childCount -= 1;
     return parent;
   }
@@ -149,15 +151,15 @@ export class CommentsService {
     return commentSum + childCommentSum;
   }
 
-  private async getChildCommentSum(id: number) {
+  private async getChildCommentSum(commenterId: number) {
     return await this.childCommentRepo.count({
-      where: { commenter: id },
+      where: { commenterId },
     });
   }
 
-  private async getCommentSum(id: number) {
+  private async getCommentSum(commenterId: number) {
     return await this.commentRepo.count({
-      where: { commenter: id },
+      where: { commenterId },
     });
   }
 }

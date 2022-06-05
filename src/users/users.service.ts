@@ -111,7 +111,7 @@ export class UsersService {
     return user;
   }
   async getUserByNaverId(naverId: string) {
-    const user = await this.userRepo.findOne({ naverId });
+    const user = await this.userRepo.findOne({ where: { naverId } });
     return user;
   }
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
@@ -121,18 +121,24 @@ export class UsersService {
 
     await this.userRepo.update(id, updateUserDto);
 
-    const updatedUser = await this.userRepo.findOne(id, { withDeleted: true });
+    const updatedUser = await this.userRepo.findOne({
+      where: { id },
+      withDeleted: true,
+    });
 
     return updatedUser;
   }
   async remove(id: number): Promise<User> {
-    const user: User = await this.userRepo.findOne(id);
+    const user: User = await this.userRepo.findOne({ where: { id } });
 
     if (!user) throw new HttpException('user not found', HttpStatus.NOT_FOUND);
 
     await this.userRepo.softDelete(id);
 
-    const deletedUser = await this.userRepo.findOne(id, { withDeleted: true });
+    const deletedUser = await this.userRepo.findOne({
+      where: { id },
+      withDeleted: true,
+    });
 
     return deletedUser;
   }

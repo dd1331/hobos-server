@@ -47,7 +47,7 @@ export class LocalsService {
 
   async removeReview(id: number) {
     try {
-      const review = await this.reviewRepo.findOne(id);
+      const review = await this.reviewRepo.findOne({ where: { id } });
       if (!review) throw new NotFoundException('리뷰가 존재하지 않습니다');
       review.deletedAt = new Date();
 

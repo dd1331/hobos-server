@@ -54,7 +54,8 @@ export class PostsService {
   }
   async getPostOrFail(id: number): Promise<Post> {
     //TODO exclude softdeleted likes
-    const post = await this.postRepo.findOne(id, {
+    const post = await this.postRepo.findOne({
+      where: { id },
       relations: ['poster', 'comments', 'comments.commenter', 'likes', 'files'],
     });
 
