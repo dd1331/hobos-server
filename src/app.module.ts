@@ -32,7 +32,7 @@ import { LocalsModule } from './locals/locals.module';
           : process.env.DATABASE_NAME,
       charset: 'utf8mb4',
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: process.env.NODE_ENV === 'test',
       dropSchema: process.env.NODE_ENV === 'test',
     }),
     UsersModule,

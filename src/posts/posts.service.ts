@@ -173,11 +173,10 @@ export class PostsService {
           exist.updatedAt = dayjs().toDate();
           await this.recommendedPost.save(exist);
         } else {
-          const recommendedPost: RecommendedPost = await this.recommendedPost.create(
-            {
+          const recommendedPost: RecommendedPost =
+            await this.recommendedPost.create({
               postId: post.id,
-            },
-          );
+            });
           await this.recommendedPost.save(recommendedPost);
         }
       }),

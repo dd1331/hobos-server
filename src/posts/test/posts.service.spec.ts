@@ -21,14 +21,15 @@ import { UpdatePostDto } from '../dto/update-post.dto';
 
 describe('PostsService', () => {
   let postsService: PostsService;
-  let usersService: UsersService;
-  let repo: Repository<Post>;
   let mockedPostRepo;
   let mockedFileRepo;
 
   beforeEach(async () => {
     mockedPostRepo = {
-      findOne: (id): Promise<Partial<Post>> => {
+      findOne: ({ where: { id } }): Promise<Partial<Post>> => {
+        return Promise.resolve({ id, views: 0 });
+      },
+      findOneBy: ({ id }): Promise<Partial<Post>> => {
         return Promise.resolve({ id, views: 0 });
       },
       create: (dto: Partial<CreatePostDto>): Promise<Partial<Post>> => {

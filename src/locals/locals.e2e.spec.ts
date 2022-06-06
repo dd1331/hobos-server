@@ -5,7 +5,7 @@ import { User } from '../users/entities/user.entity';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import * as request from 'supertest';
 
-describe('LocalsService', () => {
+describe.skip('LocalsService', () => {
   let app: INestApplication;
   let agent;
   let user: User;

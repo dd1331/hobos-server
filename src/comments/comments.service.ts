@@ -74,7 +74,7 @@ export class CommentsService {
     return comments;
   }
   async getCommentOrFail(id: number): Promise<Comment> {
-    const comment = await this.commentRepo.findOne({ where: { id } });
+    const comment = await this.commentRepo.findOneBy({ id });
 
     if (!comment) {
       throw new NotFoundException('댓글이 존재하지 않습니다');
@@ -82,8 +82,8 @@ export class CommentsService {
 
     return comment;
   }
-  async getChildComment(id: number): Promise<ChildComment> {
-    const comment = await this.childCommentRepo.findOne({ where: { id } });
+  async getChildComment(id: number) {
+    const comment = await this.childCommentRepo.findOneBy({ id });
 
     if (!comment) {
       throw new NotFoundException('댓글이 존재하지 않습니다');
@@ -102,12 +102,10 @@ export class CommentsService {
   async updateComment(dto: UpdateCommentDto): Promise<Comment> {
     const comment = await this.getCommentOrFail(dto.id);
 
-    if (!comment) return;
-
     comment.content = dto.content;
-    const updatedComment = await this.commentRepo.save(comment);
+    await this.commentRepo.save(comment);
 
-    return updatedComment;
+    return comment;
   }
 
   async deleteComment(commentId: number): Promise<Comment> {
