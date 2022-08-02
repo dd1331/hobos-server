@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostsService } from '../posts.service';
-import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Post } from '../entities/post.entity';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
@@ -18,11 +17,16 @@ import { RecommendedPost } from '../entities/recommended_post.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 import { ChildComment } from '../../comments/entities/child_comment.entity';
 import { UpdatePostDto } from '../dto/update-post.dto';
+import { DataSource } from 'typeorm';
+import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
+
+const moduleMocker = new ModuleMocker(global);
 
 describe('PostsService', () => {
   let postsService: PostsService;
   let mockedPostRepo;
   let mockedFileRepo;
+  let manager;
 
   beforeEach(async () => {
     mockedPostRepo = {
@@ -50,6 +54,10 @@ describe('PostsService', () => {
         ]);
       },
     };
+    manager = {
+      create: jest.fn().mockImplementation((data) => Promise.resolve(data)),
+      save: jest.fn().mockImplementation((data) => Promise.resolve(data)),
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
@@ -57,6 +65,8 @@ describe('PostsService', () => {
         HashtagsService,
         CommentsService,
         LikesService,
+        // DataSource,
+        // { provide: DataSource, useValue: {} },
         { provide: getRepositoryToken(File), useValue: mockedFileRepo },
         { provide: getRepositoryToken(Comment), useValue: {} },
         { provide: getRepositoryToken(ChildComment), useValue: {} },
@@ -67,7 +77,22 @@ describe('PostsService', () => {
         { provide: getRepositoryToken(Post), useValue: mockedPostRepo },
         { provide: getRepositoryToken(Like), useValue: {} },
       ],
-    }).compile();
+    })
+      .useMocker((token) => {
+        if (token === DataSource) {
+          return {
+            transaction: (callback) => callback(manager),
+          };
+        }
+        if (typeof token === 'function') {
+          const mockMetadata = moduleMocker.getMetadata(
+            token,
+          ) as MockFunctionMetadata<any, any>;
+          const Mock = moduleMocker.generateFromMetadata(mockMetadata);
+          return new Mock();
+        }
+      })
+      .compile();
     postsService = module.get<PostsService>(PostsService);
   });
 
@@ -79,7 +104,7 @@ describe('PostsService', () => {
     });
     it('존재하지 않는 경우 NotFoundException', async () => {
       mockedPostRepo.findOne = () => Promise.resolve(null);
-      const result = async () => await postsService.readPostAndCount(111);
+      const result = () => postsService.readPostAndCount(111);
       expect(result()).rejects.toThrow(NotFoundException);
       // TODO add custom message test
     });
@@ -93,12 +118,13 @@ describe('PostsService', () => {
     };
     it('포스트 작성 성공', async () => {
       const result = await postsService.createPost(payload);
-      expect(result).toEqual({ ...payload });
+      expect(result).toBeTruthy();
     });
     it('포스트 작성 실패', async () => {
-      mockedPostRepo.save = () => Promise.resolve(null);
-      const result = async () => await postsService.createPost(payload);
-      expect(result()).rejects.toThrow(BadRequestException);
+      manager.save.mockRejectedValueOnce(new BadRequestException());
+      expect(postsService.createPost(payload)).rejects.toThrow(
+        BadRequestException,
+      );
     });
     it('dto에 fileId가 존재하는 경우 post는 files를 포함', async () => {
       const payloadWithFileId: CreatePostDto = { ...payload, fileId: 2 };

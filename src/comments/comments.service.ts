@@ -76,9 +76,7 @@ export class CommentsService {
   async getCommentOrFail(id: number): Promise<Comment> {
     const comment = await this.commentRepo.findOneBy({ id });
 
-    if (!comment) {
-      throw new NotFoundException('댓글이 존재하지 않습니다');
-    }
+    if (!comment) throw new NotFoundException('댓글이 존재하지 않습니다');
 
     return comment;
   }

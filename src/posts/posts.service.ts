@@ -4,14 +4,13 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Like as TLike } from 'typeorm';
+import { DataSource, Like as TLike } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { Repository, Between, In, FindManyOptions } from 'typeorm';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { HashtagsService } from '../hashtags/hashtags.service';
-// import { CacheService } from '../cache/cache.service';
 import { File } from '../files/entities/file.entity';
 import * as dayjs from 'dayjs';
 import { GetPostsDto } from './dto/get-posts.dto';
@@ -25,26 +24,26 @@ export class PostsService {
     @InjectRepository(File) private readonly fileRepo: Repository<File>,
     @InjectRepository(RecommendedPost)
     private readonly recommendedPost: Repository<RecommendedPost>,
-    private readonly hashtagsService: HashtagsService, // private readonly cacheService: CacheService,
+    private readonly hashtagsService: HashtagsService,
+    private readonly dataSource: DataSource,
   ) {}
   private readonly logger = new Logger(PostsService.name);
 
-  async createPost(dto: CreatePostDto): Promise<Post> {
-    const newPost = await this.postRepo.save(dto);
+  async createPost(dto: CreatePostDto) {
+    return this.dataSource.transaction(async (manager) => {
+      const { hashtags, fileId } = dto;
+      const entity = manager.create(Post, dto);
+      const newPost = await manager.save(entity);
+      if (!newPost) throw new BadRequestException('글 작성에 실패했습니다');
 
-    if (!newPost) throw new BadRequestException('글 작성에 실패했습니다');
-
-    // TODO add to other methods
-    if (dto.hashtags) await this.hashtagsService.create(newPost, dto);
-
-    if (dto.fileId) {
-      newPost.files = await this.fileRepo.find({ where: { id: dto.fileId } });
-    }
-
-    await this.postRepo.save(newPost);
-
-    return newPost;
+      // TODO add to other methods
+      if (hashtags) await this.hashtagsService.createTx(manager, newPost, dto);
+      if (fileId)
+        newPost.files = await this.fileRepo.find({ where: { id: fileId } });
+      return newPost;
+    });
   }
+
   async createPostByWingman(dto: CreatePostDto): Promise<Post> {
     const post: Post = await this.postRepo.create(dto);
 

@@ -20,6 +20,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Review } from '../../locals/entities/review.entity';
 
 describe('CommentsService', () => {
+  let postsService;
   let commentsService: CommentsService;
   const user: User = {
     userId: '',
@@ -47,36 +48,30 @@ describe('CommentsService', () => {
   let mockedFileRepo;
   let mockedChildCommentRepo;
   beforeEach(async () => {
+    postsService = { getPostOrFail: jest.fn().mockResolvedValue({ id: 1 }) };
     mockedPostRepo = {
-      findOne: (id): Promise<Partial<Post>> => {
-        return Promise.resolve({ id, views: 0 });
-      },
-      create: (dto: Partial<CreatePostDto>): Promise<Partial<Post>> => {
-        return Promise.resolve({ id: Date.now().valueOf(), ...dto });
-      },
-      save: (dto: Partial<Post>) => {
-        return Promise.resolve({ ...dto });
-      },
+      findOne: (id): Promise<Partial<Post>> =>
+        Promise.resolve({ id, views: 0 }),
+      create: (dto: Partial<CreatePostDto>): Promise<Partial<Post>> =>
+        Promise.resolve({ id: Date.now().valueOf(), ...dto }),
+      save: (dto: Partial<Post>) => Promise.resolve({ ...dto }),
     };
     mockedCommentRepo = {
-      create: (dto: Partial<CreateCommentDto>): Promise<Partial<Comment>> => {
-        return Promise.resolve({ ...dto });
-      },
-      save: (dto: Partial<CreateCommentDto>): Promise<Partial<Comment>> => {
-        return Promise.resolve({ postId: dto.postId, content: dto.content });
-      },
-      findOne: (id): Promise<Partial<Comment>> => {
-        return Promise.resolve({ id, childCount: 0 });
-      },
-      findOneBy: ({ id }): Promise<Partial<Comment>> => {
-        return Promise.resolve({ id, childCount: 0 });
-      },
-      find: (): Promise<Partial<Comment>[]> => {
-        return Promise.resolve([]);
-      },
-      count: (): Promise<number> => {
-        return Promise.resolve(0);
-      },
+      create: (dto: Partial<CreateCommentDto>): Promise<Partial<Comment>> =>
+        Promise.resolve({ ...dto }),
+
+      save: (dto: Partial<CreateCommentDto>): Promise<Partial<Comment>> =>
+        Promise.resolve({ postId: dto.postId, content: dto.content }),
+
+      findOne: (id): Promise<Partial<Comment>> =>
+        Promise.resolve({ id, childCount: 0 }),
+
+      findOneBy: ({ id }): Promise<Partial<Comment>> =>
+        Promise.resolve({ id, childCount: 0 }),
+
+      find: (): Promise<Partial<Comment>[]> => Promise.resolve([]),
+
+      count: (): Promise<number> => Promise.resolve(0),
     };
     mockedFileRepo = {};
     mockedChildCommentRepo = {
@@ -104,9 +99,10 @@ describe('CommentsService', () => {
     };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PostsService,
+        // PostsService,
         CommentsService,
         HashtagsService,
+        // DataSource,
         { provide: getRepositoryToken(Post), useValue: mockedPostRepo },
         { provide: getRepositoryToken(RecommendedPost), useValue: {} },
         { provide: getRepositoryToken(File), useValue: mockedFileRepo },
@@ -117,18 +113,20 @@ describe('CommentsService', () => {
           provide: getRepositoryToken(ChildComment),
           useValue: mockedChildCommentRepo,
         },
+        {
+          provide: PostsService,
+          useValue: postsService,
+        },
       ],
     }).compile();
 
     commentsService = module.get<CommentsService>(CommentsService);
   });
-  beforeEach(async () => {});
   describe('createComment', () => {
     const payload: CreateCommentDto = { postId: 3, content: 'test content' };
 
     it('댓글 생성 성공', async () => {
       const result = await commentsService.createComment(payload, user);
-
       expect(result.commenter.id).toBe(user.id);
       expect(result.content).toBe(payload.content);
       expect(result.postId).toBe(payload.postId);
@@ -149,15 +147,15 @@ describe('CommentsService', () => {
     });
     it('부모 댓글이 존재하지 않는 경우 실패', async () => {
       mockedCommentRepo.findOneBy = () => Promise.resolve(null);
-      const result = async () =>
-        await commentsService.createChildComment(payload, user);
-      expect(result()).rejects.toThrowError(NotFoundException);
+      return expect(
+        commentsService.createChildComment(payload, user),
+      ).rejects.toThrowError(NotFoundException);
     });
     it('포스트가 존재하지 않는 경우 실패', async () => {
-      mockedPostRepo.findOne = () => Promise.resolve(null);
-      const result = async () =>
-        await commentsService.createChildComment(payload, user);
-      expect(result()).rejects.toThrowError(NotFoundException);
+      postsService.getPostOrFail.mockRejectedValueOnce(new NotFoundException());
+      return expect(
+        commentsService.createChildComment(payload, user),
+      ).rejects.toThrowError(NotFoundException);
     });
   });
   describe('getActiveComments', () => {
@@ -189,26 +187,19 @@ describe('CommentsService', () => {
     });
     it('포스트에 댓글이 존재하지 않는 경우 NotFoundException', async () => {
       mockedChildCommentRepo.findOneBy = () => Promise.resolve(null);
-      const result = async () =>
-        await commentsService.getChildComment(childCommentId);
-
-      expect(result()).rejects.toThrowError(NotFoundException);
+      return expect(
+        commentsService.getChildComment(childCommentId),
+      ).rejects.toThrowError(NotFoundException);
     });
   });
   describe('updateComment', () => {
     const id = 3;
     const dto: UpdateCommentDto = { id, content: 'updated' };
     it('업데이트 성공', async () => {
-      // mockedCommentRepo.findOne = (): Promise<Partial<Comment>> =>
-      //   Promise.resolve();
       mockedCommentRepo.save = (
         dto: Partial<UpdateCommentDto>,
       ): Promise<Partial<Comment>> => Promise.resolve(dto);
       const result = await commentsService.updateComment(dto);
-      console.log(
-        '🚀 ~ file: comments.service.spec.ts ~ line 201 ~ it ~ result',
-        result,
-      );
 
       expect(result.content).toBe(dto.content);
       expect(result.id).toBe(id);
@@ -216,9 +207,9 @@ describe('CommentsService', () => {
     it('댓글이 존재하지 않는 경우 NotFoundException', async () => {
       mockedCommentRepo.findOneBy = () => Promise.resolve(null);
 
-      const result = async () => await commentsService.updateComment(dto);
-
-      expect(result()).rejects.toThrowError(NotFoundException);
+      return expect(commentsService.updateComment(dto)).rejects.toThrowError(
+        NotFoundException,
+      );
     });
   });
   describe('getCommentOrFail', () => {
@@ -230,9 +221,9 @@ describe('CommentsService', () => {
     it('댓글이 존재하지 않는 경우 NotFoundException', async () => {
       mockedCommentRepo.findOneBy = () => Promise.resolve(null);
 
-      const result = async () => await commentsService.getCommentOrFail(id);
-
-      expect(result()).rejects.toThrowError(NotFoundException);
+      return expect(commentsService.getCommentOrFail(id)).rejects.toThrowError(
+        NotFoundException,
+      );
     });
   });
   describe('deleteComment', () => {
@@ -246,9 +237,9 @@ describe('CommentsService', () => {
     it('댓글이 존재하지 않는 경우 NotFoundException', async () => {
       mockedCommentRepo.findOneBy = () => Promise.resolve(null);
 
-      const result = async () => await commentsService.getCommentOrFail(id);
-
-      expect(result()).rejects.toThrowError(NotFoundException);
+      return expect(commentsService.getCommentOrFail(id)).rejects.toThrowError(
+        NotFoundException,
+      );
     });
   });
   describe('deleteChildComment', () => {
@@ -267,9 +258,9 @@ describe('CommentsService', () => {
     it('댓글이 존재하지 않는 경우 NotFoundException', async () => {
       mockedChildCommentRepo.findOneBy = () => Promise.resolve(null);
 
-      const result = async () => await commentsService.deleteChildComment(id);
-
-      expect(result()).rejects.toThrowError(NotFoundException);
+      return expect(
+        commentsService.deleteChildComment(id),
+      ).rejects.toThrowError(NotFoundException);
     });
   });
 

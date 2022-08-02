@@ -18,5 +18,5 @@ export class CommonEntity {
   updatedAt: Date;
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'datetime', nullable: true })
-  deletedAt: Date;
+  deletedAt?: Date | null;
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, getRepository } from 'typeorm';
+import { Repository, In, EntityManager } from 'typeorm';
 import { PostHashtag } from '../posts/entities/post_hashtag.entity';
 import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { Post } from '../posts/entities/post.entity';
@@ -16,7 +16,7 @@ export class HashtagsService {
     private readonly postHashtagRepo: Repository<PostHashtag>,
   ) {}
   async create(newPost: Post, dto: CreatePostDto) {
-    const strHashtags: string[] = dto.hashtags;
+    const strHashtags = dto.hashtags;
 
     try {
       await Promise.all(
@@ -44,6 +44,44 @@ export class HashtagsService {
     );
 
     return postHashtags;
+  }
+  async createTx(
+    manager: EntityManager,
+    post: Post,
+    { hashtags }: CreatePostDto,
+  ) {
+    const strHashtags = hashtags;
+
+    await this.createHashtags(strHashtags, manager);
+    return this.attachTags(manager, hashtags, post);
+  }
+
+  private async attachTags(
+    manager: EntityManager,
+    hashtags: string[],
+    post: Post,
+  ) {
+    const existingTags = await manager.find(Hashtag, {
+      where: { title: In(hashtags) },
+    });
+
+    const mappedHashags = existingTags.map((hashtag) => {
+      return this.postHashtagRepo.create({
+        post,
+        hashtag,
+      });
+      // TODO check circular error. it only works when it is saved by post
+    });
+    return manager.save(mappedHashags);
+  }
+
+  private async createHashtags(strHashtags: string[], manager: EntityManager) {
+    const hashTagEntites = strHashtags.map(async (title) => {
+      const existing = await manager.findOneBy(Hashtag, { title });
+      if (!existing) return manager.insert(Hashtag, { title });
+      return existing;
+    });
+    return await Promise.all(hashTagEntites);
   }
 
   async getPopularHashtags(): Promise<Hashtag[]> {

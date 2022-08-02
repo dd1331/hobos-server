@@ -34,6 +34,7 @@ import { LocalsModule } from './locals/locals.module';
       autoLoadEntities: true,
       synchronize: process.env.NODE_ENV === 'test',
       dropSchema: process.env.NODE_ENV === 'test',
+      // logging: ['query'],
     }),
     UsersModule,
     AuthModule,

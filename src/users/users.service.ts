@@ -4,7 +4,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User, RoleEnum } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as randomWords from 'random-words';
 import * as bcript from 'bcryptjs';
 import { PostsService } from '../posts/posts.service';
 import { Profile } from './users.type';
@@ -12,6 +11,7 @@ import { CommentsService } from '../comments/comments.service';
 import { LikesService } from '../like/likes.service';
 import { CreateUserNaverDto } from './dto/create-user-naver.dto';
 
+const randomWords = () => new Date().valueOf().toString();
 @Injectable()
 export class UsersService {
   constructor(

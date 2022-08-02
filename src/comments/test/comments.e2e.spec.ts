@@ -71,7 +71,6 @@ describe('Comments', () => {
       const createdComment = await createComment();
       const createChildCommentDto: CreateChildCommentDto = {
         postId: post.id,
-        commenterId: user.id,
         content: 'child98',
         parentId: createdComment.id,
       };
@@ -96,7 +95,7 @@ describe('Comments', () => {
       title: '트렌드 test',
       content: 'trend content 1',
       category: 'free',
-      hashtags: ['해시태그 테스트1', 'test트렌드5'],
+      hashtags: ['aaas', 'test트렌드5'],
     };
     return postsService.createPost(createPostDto);
   }

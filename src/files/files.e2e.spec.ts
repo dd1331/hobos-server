@@ -16,7 +16,7 @@ describe('Files', () => {
     await app.close();
   });
   beforeEach(async () => {});
-  describe('CREATE', () => {
+  describe.skip('CREATE', () => {
     it('file upload', async () => {
       const res = await request(app.getHttpServer())
         .post('/files/upload')

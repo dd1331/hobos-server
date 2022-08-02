@@ -77,7 +77,7 @@ describe('Posts', () => {
       expect(body.title).toBe(SampleCreatePostDto.title);
       expect(body.content).toBe(SampleCreatePostDto.content);
     });
-    it('create post with file', async () => {
+    it.skip('create post with file', async () => {
       const buffer = await readFile('./package.json');
 
       const fileDto: UploadFileDto = {
@@ -307,7 +307,7 @@ describe('Posts', () => {
     );
   });
 
-  // move to like test
+  //   // move to like test
   describe('/POST likePost', () => {
     it('should return created like obejct', async () => {
       const post = await createPost();
@@ -361,7 +361,7 @@ function getSampleCreatePostDto(
     title: 'test title',
     content: 'test content',
     category: 'free',
-    hashtags: ['해시태그 테스트1', '해시태그 테스트2'],
+    hashtags: ['해시태그 테스트fdasf1', '해시태그 테스트2'],
   };
   return SampleCreatePostDto;
 }
@@ -379,14 +379,14 @@ async function createLikedPosts(
     { ...SampleCreatePostDto, category: 'fire' },
     { ...SampleCreatePostDto, category: 'free' },
   ];
-  await Promise.all(
-    createPostDtoArray.map(async (item, index) => {
-      post = await postsService.createPost(item);
-      const createLikeDto: CreateLikeDto = getCreateLikeDto(post, user);
-      if (index < 3) await likesService.likeOrDislike(createLikeDto, user);
-      else await postsService.readPostAndCount(post.id);
-    }),
-  );
+  let count = 0;
+  for (const item of createPostDtoArray) {
+    post = await postsService.createPost(item);
+    const createLikeDto: CreateLikeDto = getCreateLikeDto(post, user);
+    if (count < 3) await likesService.likeOrDislike(createLikeDto, user);
+    else await postsService.readPostAndCount(post.id);
+    count++;
+  }
   return post;
 }
 

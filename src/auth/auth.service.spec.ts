@@ -43,10 +43,6 @@ describe('Auth', () => {
       providers: [
         AuthService,
         UsersService,
-        PostsService,
-        CommentsService,
-        HashtagsService,
-        LikesService,
         {
           provide: getRepositoryToken(User),
           useValue: {},
@@ -114,15 +110,17 @@ describe('Auth', () => {
     });
     it('로컬 유저 유효성체크 비밀번호 불일치', async () => {
       const wrongPasswordInput = '1234';
-      const result = async () =>
-        await authService.validateLocalUser(phoneInput, wrongPasswordInput);
-      expect(result()).rejects.toThrowError(NotFoundException);
+      expect.assertions(1);
+      return expect(
+        authService.validateLocalUser(phoneInput, wrongPasswordInput),
+      ).rejects.toThrowError(NotFoundException);
     });
     it('로컬 유저 유효성체크 전화번호 없음', async () => {
       mockedUsersService.getUserByPhone = () => Promise.resolve(null);
-      const result = async () =>
-        await authService.validateLocalUser(phoneInput, passwordInput);
-      expect(result()).rejects.toThrowError(NotFoundException);
+      expect.assertions(1);
+      return expect(
+        authService.validateLocalUser(phoneInput, passwordInput),
+      ).rejects.toThrowError(NotFoundException);
     });
   });
 });
