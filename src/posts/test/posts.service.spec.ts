@@ -30,9 +30,14 @@ describe('PostsService', () => {
 
   beforeEach(async () => {
     mockedPostRepo = {
-      findOne: ({ where: { id } }): Promise<Partial<Post>> => {
-        return Promise.resolve({ id, views: 0 });
-      },
+      findOne: jest.fn().mockImplementation(({ where: { id } }) =>
+        Promise.resolve({
+          // FIXME: better way
+          id,
+          views: 0,
+          read: new Post().read,
+        }),
+      ),
       findOneBy: ({ id }): Promise<Partial<Post>> => {
         return Promise.resolve({ id, views: 0 });
       },
@@ -42,6 +47,10 @@ describe('PostsService', () => {
       save: (dto: Partial<Post>) => {
         return Promise.resolve({ ...dto });
       },
+      softRemove: jest.fn().mockImplementation((entity) => {
+        entity.deletedAt = new Date();
+        return Promise.resolve(entity);
+      }),
     };
     mockedFileRepo = {
       find: (): Promise<Partial<File>[]> => {
@@ -65,8 +74,7 @@ describe('PostsService', () => {
         HashtagsService,
         CommentsService,
         LikesService,
-        // DataSource,
-        // { provide: DataSource, useValue: {} },
+        Post,
         { provide: getRepositoryToken(File), useValue: mockedFileRepo },
         { provide: getRepositoryToken(Comment), useValue: {} },
         { provide: getRepositoryToken(ChildComment), useValue: {} },
@@ -145,6 +153,7 @@ describe('PostsService', () => {
       expect(result.content).toBe(payload.content);
     });
     it('포스트 파일 업데이트 성공', async () => {
+      expect.assertions(1);
       const fileId = 1;
       const payloadWithFileId: UpdatePostDto = { ...payload, fileId };
       const result = await postsService.updatePost(payloadWithFileId);
@@ -155,8 +164,10 @@ describe('PostsService', () => {
   describe('readPostAndCount', () => {
     it('조회 후 뷰 +1', async () => {
       const views = 11;
-      mockedPostRepo.findOne = (): Promise<Partial<Post>> =>
-        Promise.resolve({ views });
+      mockedPostRepo.findOne.mockResolvedValueOnce({
+        views,
+        read: new Post().read,
+      });
       const id = 1;
       const result = await postsService.readPostAndCount(id);
       expect(result.views).toBe(views + 1);

@@ -44,6 +44,10 @@ export class Post extends CommonEntity {
 
   @OneToMany(() => PostHashtag, (postHashtag) => postHashtag.post)
   postHashtags: PostHashtag[];
+
+  read() {
+    this.views = this.views + 1;
+  }
 }
 
 export type PostCategory = 'free' | 'meetup' | 'fire' | 'investment';

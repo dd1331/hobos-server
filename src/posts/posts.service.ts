@@ -38,37 +38,35 @@ export class PostsService {
 
       // TODO add to other methods
       if (hashtags) await this.hashtagsService.createTx(manager, newPost, dto);
-      if (fileId)
+      if (fileId) {
         newPost.files = await this.fileRepo.find({ where: { id: fileId } });
+        await manager.save(newPost);
+      }
       return newPost;
     });
   }
 
   async createPostByWingman(dto: CreatePostDto): Promise<Post> {
-    const post: Post = await this.postRepo.create(dto);
+    const post = this.postRepo.create(dto);
 
-    await this.postRepo.save(post);
-
-    return post;
+    return this.postRepo.save(post);
   }
   async getPostOrFail(id: number): Promise<Post> {
-    //TODO exclude softdeleted likes
+    //TODO: exclude softdeleted likes
     const post = await this.postRepo.findOne({
       where: { id },
       relations: ['poster', 'comments', 'comments.commenter', 'likes', 'files'],
     });
 
-    if (!post) {
-      throw new NotFoundException('존재하지 않는 게시글입니다');
-    }
+    if (!post) throw new NotFoundException('존재하지 않는 게시글입니다');
 
     return post;
   }
   async readPostAndCount(id: number): Promise<Post> {
     const post = await this.getPostOrFail(id);
-    post.views += 1;
-
-    return await this.postRepo.save(post);
+    // TODO: use event or subscirber
+    post.read();
+    return this.postRepo.save(post);
   }
   async getPosts(dto: GetPostsDto): Promise<Post[]> {
     // TODO find better way of setting default when dto used
@@ -83,7 +81,7 @@ export class PostsService {
       );
       where['id'] = In(postIds);
     }
-    const posts = await this.postRepo.find({
+    return this.postRepo.find({
       where,
       relations: ['poster', 'comments', 'files'],
       order: {
@@ -92,16 +90,15 @@ export class PostsService {
       take,
       skip,
     });
-
-    return posts;
   }
   async getPostsWithKeyword(dto: GetPostsDto): Promise<Post[]> {
+    // TODO: user dto validation
     if (!dto.keyword) throw new BadRequestException();
-    // TODO seperate search options
+    // TODO: seperate search options
     // there must be a better way of using like function
     const take = dto.take ? dto.take : 20;
     const skip = dto.page ? (dto.page - 1) * take : 0;
-    const posts = await this.postRepo.find({
+    return this.postRepo.find({
       where: [
         { title: TLike(`%${dto.keyword}%`) },
         { title: TLike(`${dto.keyword}%`) },
@@ -113,8 +110,6 @@ export class PostsService {
       take,
       skip,
     });
-
-    return posts;
   }
 
   async getRecentPosts(): Promise<Post[]> {
@@ -124,7 +119,7 @@ export class PostsService {
       order: { createdAt: 'DESC' },
     };
 
-    return await this.getCachedOrNormalPosts('recentPosts', findOptions);
+    return this.postRepo.find(findOptions);
   }
   async getPopularPosts(): Promise<Post[]> {
     const findOptions: FindManyOptions<Post> = {
@@ -136,15 +131,10 @@ export class PostsService {
       take: 5,
     };
 
-    return await this.getCachedOrNormalPosts('popularPosts', findOptions);
+    return this.postRepo.find(findOptions);
   }
   async getRecommendedPosts(): Promise<Post[]> {
-    // const cachedRecommendedPosts: Post[] = await this.getCached(
-    //   'recommendedPosts',
-    // );
-    // if (cachedRecommendedPosts) return cachedRecommendedPosts;
-
-    const postIds: number[] = await this.getRecommendedPostIds();
+    const postIds = await this.getRecommendedPostIds();
     const findOptions: FindManyOptions<Post> = {
       where: { id: In(postIds) },
       order: { likeCount: 'DESC' },
@@ -152,37 +142,35 @@ export class PostsService {
       take: 12,
     };
 
-    return await this.getCachedOrNormalPosts('recommendedPosts', findOptions);
+    return this.postRepo.find(findOptions);
   }
 
+  // TODO: move to proper module
   @Cron(CronExpression.EVERY_HOUR)
   async setRecommendedPosts(): Promise<void> {
-    // MEMO cron runs twice when this service is provided to other module
     this.logger.debug(
       `setRecommendedPosts started ${PostsService.name} ${Date.now()}`,
     );
-    const postIds: number[] = await this.getPostIdsWithImage();
-    const postsWithImage: Post[] = await this.getPostsWithImage(postIds);
+    const postIds = await this.getPostIdsWithImage();
+    const postsWithImage = await this.getPostsWithImage(postIds);
     await Promise.all(
-      postsWithImage.map(async (post) => {
+      postsWithImage.map(async ({ id }) => {
         const exist = await this.recommendedPost.findOne({
-          where: { postId: post.id },
+          where: { postId: id },
         });
         if (exist) {
           exist.updatedAt = dayjs().toDate();
-          await this.recommendedPost.save(exist);
-        } else {
-          const recommendedPost: RecommendedPost =
-            await this.recommendedPost.create({
-              postId: post.id,
-            });
-          await this.recommendedPost.save(recommendedPost);
+          return this.recommendedPost.save(exist);
         }
+        const recommendedPost = this.recommendedPost.create({
+          postId: id,
+        });
+        return this.recommendedPost.save(recommendedPost);
       }),
     );
   }
-  async getPostsWithImage(ids): Promise<Post[]> {
-    return await this.postRepo.find({
+  getPostsWithImage(ids: number[]): Promise<Post[]> {
+    return this.postRepo.find({
       where: { id: In(ids) },
       order: { likeCount: 'DESC', createdAt: 'DESC' },
       take: 12,
@@ -193,13 +181,11 @@ export class PostsService {
       order: { updatedAt: 'DESC' },
       take: 12,
     });
-    return posts.map((post) => {
-      return post.postId;
-    });
+    return posts.map(({ postId }) => postId);
   }
 
   async getPostIdsWithImage(): Promise<number[]> {
-    const files: File[] = await this.fileRepo.find({
+    const files = await this.fileRepo.find({
       where: {
         createdAt: Between(
           dayjs().subtract(10, 'd').toDate(),
@@ -207,72 +193,49 @@ export class PostsService {
         ),
       },
     });
-    const postIds = files.map((file) => file.postId);
-    return postIds;
+    return files.map(({ postId }) => postId);
   }
-  async getEmphasizedPosts(dto: GetPostsDto): Promise<Post[]> {
+  async getEmphasizedPosts({ category }: GetPostsDto): Promise<Post[]> {
     const findOptions: FindManyOptions<Post> = {
       where: {
         // TODO add created filter
-        category: dto.category,
+        category,
       },
       order: { likeCount: 'DESC' },
       take: 5,
     };
 
-    return await this.postRepo.find(findOptions);
+    return this.postRepo.find(findOptions);
   }
-  async getCachedOrNormalPosts(
-    key: string,
-    findOptions: FindManyOptions<Post>,
-  ): Promise<Post[]> {
-    // MEMO commented out cause of heroku redis issue.
-    // free plan is barely usable
-    // const cashedPosts: Post[] = await this.getCached(key);
 
-    // if (cashedPosts) return cashedPosts;
-    const posts = await this.postRepo.find(findOptions);
-
-    // await this.cacheService.set(key, posts);
-
-    return posts;
-  }
-  // async getCached<T>(key: string): Promise<T[] | null> {
-  //   const cashed: T[] = await this.cacheService.get(key);
-
-  //   return cashed ? cashed : null;
-  // }
-
-  async updatePost(dto: UpdatePostDto): Promise<Post> {
-    const { title, content } = dto;
-    const existingPost = await this.getPostOrFail(dto.id);
-
-    if (!existingPost) return;
+  async updatePost({
+    title,
+    content,
+    id,
+    fileId,
+  }: UpdatePostDto): Promise<Post> {
+    const existingPost = await this.getPostOrFail(id);
 
     existingPost.title = title;
     existingPost.content = content;
-    if (dto.fileId)
+
+    if (fileId) {
       existingPost.files = await this.fileRepo.find({
-        where: { id: dto.fileId },
+        where: { id: fileId },
       });
+    }
 
-    const updatedPost = await this.postRepo.save(existingPost);
-
-    return updatedPost;
+    return this.postRepo.save(existingPost);
   }
   async deletePost(postId: number): Promise<Post> {
     // TODO softdelete related comments
     const post = await this.getPostOrFail(postId);
+    await this.postRepo.softRemove(post);
 
-    if (!post) return;
-
-    post.deletedAt = new Date();
-    await this.postRepo.save(post);
-
-    return post;
+    return this.postRepo.save(post);
   }
 
-  async getPostSumByUserId(poster: number): Promise<number> {
-    return await this.postRepo.count({ where: { poster } });
+  getPostSumByUserId(poster: number): Promise<number> {
+    return this.postRepo.count({ where: { poster } });
   }
 }
