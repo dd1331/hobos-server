@@ -1,8 +1,7 @@
-import { User, RoleEnum } from '../entities/user.entity';
-import { PartialType } from '@nestjs/mapped-types';
 import { IsMobilePhone } from 'class-validator';
+import { RoleEnum } from '../entities/user.entity';
 
-export class CreateUserDto extends PartialType(User) {
+export class CreateUserDto {
   userId?: string;
   userName?: string;
   password?: string;

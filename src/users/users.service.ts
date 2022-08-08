@@ -1,15 +1,21 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User, RoleEnum } from './entities/user.entity';
+import {
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import * as bcript from 'bcryptjs';
-import { PostsService } from '../posts/posts.service';
-import { Profile } from './users.type';
+import { Repository } from 'typeorm';
 import { CommentsService } from '../comments/comments.service';
 import { LikesService } from '../like/likes.service';
+import { PostsService } from '../posts/posts.service';
 import { CreateUserNaverDto } from './dto/create-user-naver.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { RoleEnum, User } from './entities/user.entity';
+import { Profile } from './users.type';
 
 const randomWords = () => new Date().valueOf().toString();
 @Injectable()
@@ -27,36 +33,28 @@ export class UsersService {
     dto.userId = randomWords() + 'ID';
     dto.userName = randomWords() + 'NAME';
 
-    const newUser = await this.userRepo.create(dto);
-    await this.userRepo.save(newUser);
-
-    return newUser;
+    const newUser = this.userRepo.create(dto);
+    return this.userRepo.save(newUser);
   }
 
   async createByNaverId(dto: CreateUserNaverDto): Promise<User> {
-    dto.password = randomWords();
-    return await this.create(dto);
+    const password = randomWords();
+    return this.create({ ...dto, password });
   }
-  async checkDuplication(dto: CreateUserDto): Promise<boolean> {
-    const { phone } = dto;
-    const where = [{ phone }];
-    const isExisting = await this.userRepo.findOne({ where });
+  async checkDuplication({ phone }: CreateUserDto): Promise<boolean> {
+    const isExisting = await this.userRepo.findOne({ where: { phone } });
 
-    if (isExisting) {
-      throw new HttpException('이미 존재하는 번호입니다', HttpStatus.CONFLICT);
-    }
+    if (isExisting) throw new ConflictException('이미 존재하는 번호입니다');
 
     return true;
   }
 
   async findAll(): Promise<User[]> {
-    const users: User[] = await this.userRepo.find();
-
-    return users;
+    return this.userRepo.find();
   }
 
   async findWingmanUsers(): Promise<User[]> {
-    const users: User[] = await this.userRepo.find({
+    const users = await this.userRepo.find({
       where: { role: RoleEnum.WINGMAN },
     });
     // TODO SEED database instead of hard coding
@@ -74,18 +72,12 @@ export class UsersService {
   }
 
   async findAllWithDeleted(): Promise<User[]> {
-    const users: User[] = await this.userRepo.find({ withDeleted: true });
-
-    return users;
+    return this.userRepo.find({ withDeleted: true });
   }
 
-  async getUserOrFail(id: number): Promise<User> {
-    const user: User = await this.userRepo.findOne({
-      where: { id },
-    });
-
-    if (!user) throw new HttpException('user not found', HttpStatus.NOT_FOUND);
-
+  async getUserByIdOrFail(id: number): Promise<User> {
+    const user = await this.userRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException('user not found');
     return user;
   }
 
@@ -111,13 +103,10 @@ export class UsersService {
     return user;
   }
   async getUserByNaverId(naverId: string) {
-    const user = await this.userRepo.findOne({ where: { naverId } });
-    return user;
+    return this.userRepo.findOne({ where: { naverId } });
   }
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    const user = await this.getUserOrFail(id);
-
-    if (!user) return;
+    await this.getUserByIdOrFail(id);
 
     await this.userRepo.update(id, updateUserDto);
 
@@ -129,9 +118,7 @@ export class UsersService {
     return updatedUser;
   }
   async remove(id: number): Promise<User> {
-    const user: User = await this.userRepo.findOne({ where: { id } });
-
-    if (!user) throw new HttpException('user not found', HttpStatus.NOT_FOUND);
+    await this.getUserByIdOrFail(id);
 
     await this.userRepo.softDelete(id);
 

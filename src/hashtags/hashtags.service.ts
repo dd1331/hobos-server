@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, EntityManager } from 'typeorm';
+import { Repository, In, EntityManager, getRepository } from 'typeorm';
 import { PostHashtag } from '../posts/entities/post_hashtag.entity';
 import { CreatePostDto } from '../posts/dto/create-post.dto';
 import { Post } from '../posts/entities/post.entity';
